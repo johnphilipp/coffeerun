@@ -1,7 +1,16 @@
 import type { NextConfig } from "next";
 
+// allow all from *.cloudfront.net
+
 const nextConfig: NextConfig = {
-  /* config options here */
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "**",
+      },
+    ],
+  },
 };
 
 export default nextConfig;
