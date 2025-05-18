@@ -22,11 +22,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.accessToken = account.access_token;
         token.refreshToken = account.refresh_token;
       }
-      console.log("JWT callback tokens:", token);
+      // console.log("JWT callback tokens:", token);
       return token;
     },
     async session({ session, token }) {
-      console.log("Session callback tokens:", token);
+      // console.log("Session callback tokens:", token);
       session.user.accessToken = token.accessToken as string;
       session.user.refreshToken = token.refreshToken as string;
       return session;

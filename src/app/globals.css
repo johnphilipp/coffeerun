@@ -121,3 +121,22 @@
     @apply bg-background text-foreground;
   }
 }
+
+button:focus {
+  outline: none;
+}
+
+@layer utilities {
+  @keyframes fade-in {
+    0% {
+      opacity: 0;
+    }
+    100% {
+      opacity: 1;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 2s ease-in-out forwards;
+  }
+}
