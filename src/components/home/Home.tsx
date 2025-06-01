@@ -4,13 +4,11 @@ import { signIn } from "next-auth/react";
 import { FaStrava, FaGift } from "react-icons/fa";
 import Link from "next/link";
 import { Button } from "../ui/button";
-import Header from "../header/Header";
 import { ChevronRight } from "lucide-react";
 
 export default function Home() {
   return (
-    <div className="h-screen flex flex-col bg-white">
-      <Header light={true} />
+    <div className="h-full flex flex-col">
       <main className="flex-1 flex flex-col">
         <section className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="w-full max-w-[280px] aspect-square relative">

@@ -1,9 +1,9 @@
-import { StravaActivity } from "@/types/strava-activity";
+import { Activity } from "@/types/activity";
 
-export async function fetchStravaActivities(accessToken: string) {
+export async function fetchActivitiesFromStrava(accessToken: string) {
   const perPage = 50;
   let page = 1;
-  let activities: StravaActivity[] = [];
+  let activities: Activity[] = [];
 
   while (true) {
     const res = await fetch(
@@ -14,6 +14,7 @@ export async function fetchStravaActivities(accessToken: string) {
         },
       }
     );
+    console.log(res);
 
     const activityBatch = await res.json();
     if (!Array.isArray(activityBatch) || !activityBatch.length) break;
@@ -21,7 +22,7 @@ export async function fetchStravaActivities(accessToken: string) {
     activities = [...activities, ...activityBatch];
     page++;
 
-    if (page === 3) break; // For demo purposes, only fetch first 3 pages
+    if (page === 3) break; // For demo purposes, only fetch first 5 pages
   }
 
   return activities;

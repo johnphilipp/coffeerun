@@ -7,16 +7,18 @@ import {
   PresentationControls,
 } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
-import { EffectComposer, Bloom, Vignette } from "@react-three/postprocessing";
 import * as THREE from "three";
 
-export default function MugRenderer() {
+export default function Scene() {
   return (
     <Canvas
       shadows
       dpr={[1, 2]}
       camera={{ fov: 100, position: [0, 4, 12] }}
-      gl={{ toneMapping: THREE.ACESFilmicToneMapping, toneMappingExposure: 1 }}
+      gl={{
+        toneMapping: THREE.ACESFilmicToneMapping,
+        toneMappingExposure: 1,
+      }}
       style={{
         touchAction: "none",
         background:

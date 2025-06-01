@@ -1,11 +1,14 @@
-import { placeholderImage } from "@/data/placeholderImage";
+"use client";
+
 import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
+import { useActivityStore } from "@/store/activityStore";
 
 export default function Mug() {
   const meshRef = useRef<THREE.Mesh>(null);
+  const { generatedImage } = useActivityStore();
 
   const { nodes, materials } = useGLTF("/assets/model/caneca.glb");
 
@@ -16,7 +19,7 @@ export default function Mug() {
     }
   );
 
-  const loadedTexture = useTexture(placeholderImage, (tex) => {
+  const loadedTexture = useTexture(generatedImage, (tex) => {
     tex.flipY = false;
   });
 

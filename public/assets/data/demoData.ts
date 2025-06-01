@@ -1,4 +1,6 @@
-export const demoData1 = [
+import { Activity } from "@/types/activity";
+
+export const demoData: Activity[] = [
   {
     resource_state: 2,
     athlete: {
