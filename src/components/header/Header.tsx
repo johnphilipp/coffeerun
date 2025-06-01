@@ -14,27 +14,32 @@ import {
 } from "@/components/ui/dropdown-menu";
 import Link from "next/link";
 
-export default function Header({
-  user,
-}: {
+interface HeaderProps {
+  light?: boolean;
   user?: {
     name: string;
     email: string;
     image?: string;
   };
-}) {
+}
+
+export default function Header({ light, user }: HeaderProps) {
   return (
-    <header className="flex h-16 items-center justify-between px-6 z-50">
+    <header className="mt-4 flex items-center justify-between px-6 z-50">
       <Link
         href="/"
-        className="text-xl font-light tracking-tight text-gray-900 hover:cursor-pointer"
+        className={`text-xl font-light tracking-tight ${
+          light
+            ? "text-gray-800 hover:text-gray-900"
+            : "text-gray-200 hover:text-gray-300"
+        } hover:cursor-pointer mx-auto hover:scale-105 transition-all duration-300`}
       >
-        Trophy<span className="font-medium">Mug</span>
+        trophy<span className="font-bold">mug</span>
       </Link>
       {user && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-2 rounded-full hover:cursor-pointer hover:scale-110 transition-all duration-300">
+            <button className="flex items-center gap-2 rounded-full hover:cursor-pointer hover:scale-110 transition-all duration-300 hover:opacity-80">
               <Avatar className="h-8 w-8">
                 <AvatarImage src={user.image} alt={user.name} />
                 <AvatarFallback>

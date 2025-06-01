@@ -10,7 +10,7 @@ import { ChevronRight } from "lucide-react";
 export default function Home() {
   return (
     <div className="h-screen flex flex-col bg-white">
-      <Header />
+      <Header light={true} />
       <main className="flex-1 flex flex-col">
         <section className="flex-1 flex flex-col items-center justify-center px-6">
           <div className="w-full max-w-[280px] aspect-square relative">
@@ -31,16 +31,16 @@ export default function Home() {
         <section className="flex flex-col gap-3 p-6 items-center">
           <Button
             onClick={() => signIn("strava", { redirectTo: "/editor" })}
-            className="w-full hover:cursor-pointer flex items-center gap-3 h-12 text-lg bg-[#fc4c02]"
+            className="w-full hover:cursor-pointer flex items-center gap-3 h-12 text-lg bg-[#fc4c02] hover:bg-[#fc4c02]/80 max-w-md hover:scale-105 transition-all duration-300"
             variant="default"
           >
             <FaStrava style={{ transform: "scale(1.7)" }} />
             Connect with Strava
           </Button>
 
-          <Link href="/" className="w-full">
+          <Link href="/" className="w-full max-w-md">
             <Button
-              className="w-full hover:cursor-pointer flex items-center gap-3 h-12 text-lg"
+              className="w-full hover:cursor-pointer flex items-center gap-3 h-12 text-lg hover:scale-105 transition-all duration-300"
               variant="outline"
             >
               <FaGift style={{ transform: "scale(1.5)" }} />
@@ -50,7 +50,7 @@ export default function Home() {
 
           <Link
             href="#"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200 inline-flex items-center justify-center gap-1"
+            className="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200 inline-flex items-center justify-center gap-1 hover:scale-105 transition-all duration-300"
           >
             View a demo
             <ChevronRight className="w-4 h-4" />
