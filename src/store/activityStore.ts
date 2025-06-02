@@ -5,35 +5,51 @@ import { create } from "zustand";
 
 interface ActivityState {
   activities: Activity[];
+  validActivities: Activity[];
   filteredActivities: Activity[];
   generatedImage: string;
   setActivities: (activities: Activity[]) => void;
-  setFilteredActivities: (activities: Activity[]) => void;
+  validateActivities: () => void;
+  filterActivities: () => void;
   generateImage: () => Promise<string>;
   setGeneratedImage: (image: string) => void;
 }
 
 export const useActivityStore = create<ActivityState>((set, get) => ({
   activities: [],
+  validActivities: [],
   filteredActivities: [],
   generatedImage: "/assets/images/demoImage.jpg", // Default placeholder
 
   setActivities: (activities) => {
     set({ activities });
-    get().generateImage();
+    get().validateActivities(); // Filter out activities without polylines
+    get().filterActivities(); // Filter based on current controls selection
+    get().generateImage(); // Regenerate image when new activities are set
   },
 
-  setFilteredActivities: (filteredActivities) => {
+  validateActivities: () => {
+    const { activities } = get();
+    const validActivities = activities.filter(
+      (activity) =>
+        activity?.map?.summary_polyline &&
+        activity.map.summary_polyline.length > 0
+    );
+    set({ validActivities });
+  },
+
+  filterActivities: () => {
+    const { validActivities } = get();
+    const { selectedActivityTypes } = useControlsStore.getState();
+    const filteredActivities = validActivities.filter((activity) =>
+      selectedActivityTypes.includes(activity.type || activity.sport_type)
+    );
     set({ filteredActivities });
-    get().generateImage();
   },
 
   generateImage: async () => {
-    const { activities } = get();
-    const { mugColor, strokeColor } = useControlsStore.getState();
-
     try {
-      const newImage = await createImage(activities, mugColor, strokeColor);
+      const newImage = await createImage();
       set({ generatedImage: newImage });
       return newImage;
     } catch (error) {
@@ -45,12 +61,20 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   setGeneratedImage: (image) => set({ generatedImage: image }),
 }));
 
-// Subscribe to controlsStore to regenerate image on mugColor or strokeColor change
+// Subscribe to controlsStore to regenerate image on mugColor, strokeColor, or selectedActivityTypes change
 useControlsStore.subscribe((state, prevState) => {
-  if (
-    state.mugColor !== prevState.mugColor ||
-    state.strokeColor !== prevState.strokeColor
-  ) {
+  const mugColorChanged = state.mugColor !== prevState.mugColor;
+  const strokeColorChanged = state.strokeColor !== prevState.strokeColor;
+  const activityTypesChanged =
+    JSON.stringify(state.selectedActivityTypes) !==
+    JSON.stringify(prevState.selectedActivityTypes);
+
+  if (mugColorChanged || strokeColorChanged || activityTypesChanged) {
+    if (activityTypesChanged) {
+      // If activity types changed, filter activities first
+      useActivityStore.getState().filterActivities();
+    }
+    // Then, generate the image (which will use the latest filteredActivities)
     useActivityStore.getState().generateImage();
   }
 });

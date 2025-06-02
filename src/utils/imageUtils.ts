@@ -1,24 +1,14 @@
-import { Activity } from "@/types/activity";
+import { useActivityStore } from "@/store/activityStore";
+import { useControlsStore } from "@/store/controlsStore";
 import polyline from "@mapbox/polyline";
 
 /**
- * Create an image from the activities
- * @param activities - The activities to create the image from
- * @param mugColor - The color of the mug
- * @param strokeColor - The color of the stroke
+ * Create an image from the activities and controls
  * @returns The image as a base64 string
  */
-export const createImage = async (
-  activities: Activity[],
-  mugColor: string,
-  strokeColor: string
-): Promise<string> => {
-  // Filter out activities with no polyline
-  const filteredActivities = activities.filter(
-    (activity) =>
-      activity?.map?.summary_polyline &&
-      activity.map.summary_polyline.length > 0
-  );
+export const createImage = async (): Promise<string> => {
+  const { filteredActivities } = useActivityStore.getState();
+  const { mugColor, strokeColor } = useControlsStore.getState();
 
   // Create canvas
   const canvas = document.createElement("canvas");
