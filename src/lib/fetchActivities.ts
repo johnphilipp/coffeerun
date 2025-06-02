@@ -14,7 +14,6 @@ export async function fetchActivitiesFromStrava(accessToken: string) {
         },
       }
     );
-    console.log(res);
 
     const activityBatch = await res.json();
     if (!Array.isArray(activityBatch) || !activityBatch.length) break;

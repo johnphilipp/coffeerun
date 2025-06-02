@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { Activity } from "@/types/activity";
+import { createImage } from "@/utils/createImage";
+import { useControlsStore } from "./controlsStore";
 
 interface ActivityState {
   activities: Activity[];
@@ -11,25 +13,6 @@ interface ActivityState {
   generateImage: () => Promise<string>;
   setGeneratedImage: (image: string) => void;
 }
-
-// Placeholder image generation function
-const generateImageFromActivities = async (
-  activities: Activity[]
-): Promise<string> => {
-  // For now, just return the placeholder image path
-  // In the future, this could make an API call to generate an image based on activities
-  console.log(
-    "Generating image from activities:",
-    activities.length,
-    "activities"
-  );
-
-  // Simulate some async work
-  await new Promise((resolve) => setTimeout(resolve, 1500));
-
-  // Return the placeholder image path (same as used in Mug.tsx)
-  return "/assets/images/demoImage.jpg";
-};
 
 export const useActivityStore = create<ActivityState>((set, get) => ({
   activities: [],
@@ -51,11 +34,12 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 
   generateImage: async () => {
     const { activities } = get();
+    const { mugColor } = useControlsStore.getState();
 
     set({ isGenerating: true });
 
     try {
-      const newImage = await generateImageFromActivities(activities);
+      const newImage = await createImage(activities, mugColor);
       set({ generatedImage: newImage, isGenerating: false });
       return newImage;
     } catch (error) {
@@ -67,3 +51,10 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 
   setGeneratedImage: (image) => set({ generatedImage: image }),
 }));
+
+// Subscribe to controlsStore to regenerate image on mugColor change
+useControlsStore.subscribe((state, prevState) => {
+  if (state.mugColor !== prevState.mugColor) {
+    useActivityStore.getState().generateImage();
+  }
+});

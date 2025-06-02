@@ -10,6 +10,7 @@ import {
   ListTodo,
   TextCursorInput,
 } from "lucide-react";
+import { useControlsStore } from "@/store/controlsStore";
 
 export default function Controls() {
   return (
@@ -25,15 +26,32 @@ export default function Controls() {
 }
 
 function MugColorPicker() {
+  const { mugColor, setMugColor } = useControlsStore();
+
+  const colors = [
+    "#e4c192",
+    "#FFFFFF",
+    "#000000",
+    "#FF0000",
+    "#00FF00",
+    "#0000FF",
+  ];
+
   return (
     <Popover>
       <PopoverTrigger>
-        <Circle className="fill-white text-white" />
+        <Circle style={{ fill: mugColor, color: mugColor }} />
       </PopoverTrigger>
       <PopoverContent className="flex gap-2">
-        <button className="bg-white rounded-full hover:scale-110 transition-all duration-300 hover:opacity-90 hover:cursor-pointer">
-          <Circle className="fill-gray-900 text-gray-900" />
-        </button>
+        {colors.map((color) => (
+          <button
+            key={color}
+            className="rounded-full hover:scale-110 transition-all duration-300 hover:opacity-90 hover:cursor-pointer"
+            onClick={() => setMugColor(color)}
+          >
+            <Circle style={{ fill: color, color: color }} />
+          </button>
+        ))}
       </PopoverContent>
     </Popover>
   );

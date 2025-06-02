@@ -15,21 +15,21 @@ interface EditorProps {
 export default function Editor({ activities }: EditorProps) {
   const { isGenerating } = useActivityImageGeneration(activities);
 
+  if (isGenerating) {
+    return (
+      <div className="h-screen flex items-center justify-center -mt-12">
+        <Loader2 className="w-10 h-10 animate-spin text-white" />
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <div className="flex-1 -mt-12">
-        {isGenerating ? (
-          <div className="h-full w-full flex items-center justify-center">
-            <Loader2 className="w-10 h-10 animate-spin text-white" />
-          </div>
-        ) : (
-          <>
-            <AddToCartButton />
-            <Scene />
-            <Controls />
-            <CartDrawer />
-          </>
-        )}
+        <AddToCartButton />
+        <Scene />
+        <Controls />
+        <CartDrawer />
       </div>
     </div>
   );
