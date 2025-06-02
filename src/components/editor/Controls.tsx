@@ -29,9 +29,9 @@ function MugColorPicker() {
   const { mugColor, setMugColor } = useControlsStore();
 
   const colors = [
-    "#e4c192",
-    "#FFFFFF",
     "#000000",
+    "#FFFFFF",
+    "#e4c192",
     "#FF0000",
     "#00FF00",
     "#0000FF",
@@ -58,12 +58,39 @@ function MugColorPicker() {
 }
 
 function StrokeColorPicker() {
+  const { strokeColor, setStrokeColor } = useControlsStore();
+
+  const colors = [
+    "#FFFFFF",
+    "#000000",
+    "#FF0000",
+    "#00FF00",
+    "#0000FF",
+    "#FFFF00",
+  ];
+
   return (
     <Popover>
       <PopoverTrigger>
-        <Circle className="text-red-600" />
+        <Circle
+          className="text-white"
+          style={{ stroke: strokeColor, strokeWidth: 2 }}
+        />
       </PopoverTrigger>
-      <PopoverContent>Place content for the popover here.</PopoverContent>
+      <PopoverContent className="flex gap-2">
+        {colors.map((color) => (
+          <button
+            key={color}
+            className="rounded-full hover:scale-110 transition-all duration-300 hover:opacity-90 hover:cursor-pointer"
+            onClick={() => setStrokeColor(color)}
+          >
+            <Circle
+              className="text-white"
+              style={{ stroke: color, strokeWidth: 2 }}
+            />
+          </button>
+        ))}
+      </PopoverContent>
     </Popover>
   );
 }

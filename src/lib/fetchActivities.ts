@@ -21,7 +21,7 @@ export async function fetchActivitiesFromStrava(accessToken: string) {
     activities = [...activities, ...activityBatch];
     page++;
 
-    if (page === 3) break; // For demo purposes, only fetch first 5 pages
+    if (page === 5) break; // For demo purposes, only fetch first 5 pages
   }
 
   return activities;

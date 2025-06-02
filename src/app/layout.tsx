@@ -2,6 +2,7 @@ import Header from "@/components/header/Header";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import DynamicBackground from "@/components/background/DynamicBackground";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,14 +27,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased h-screen flex flex-col`}
-        style={{
-          background:
-            "radial-gradient(circle at 50% 60%, #3a3a3a 0%, #0d0d0d 100%)",
-        }}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <Header />
-        <main className="flex-1">{children}</main>
+        <DynamicBackground>
+          <Header />
+          <main className="flex-1">{children}</main>
+        </DynamicBackground>
       </body>
     </html>
   );

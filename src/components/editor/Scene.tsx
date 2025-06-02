@@ -22,11 +22,6 @@ export default function Scene() {
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1,
       }}
-      style={{
-        touchAction: "none",
-        background:
-          "radial-gradient(circle at 50% 60%, #3a3a3a 0%, #0d0d0d 100%)",
-      }}
     >
       <Environment preset="forest" />
 

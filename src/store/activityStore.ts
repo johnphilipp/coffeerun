@@ -1,6 +1,6 @@
 import { useControlsStore } from "@/store/controlsStore";
 import { Activity } from "@/types/activity";
-import { createImage } from "@/utils/createImage";
+import { createImage } from "@/utils/imageUtils";
 import { create } from "zustand";
 
 interface ActivityState {
@@ -30,10 +30,10 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 
   generateImage: async () => {
     const { activities } = get();
-    const { mugColor } = useControlsStore.getState();
+    const { mugColor, strokeColor } = useControlsStore.getState();
 
     try {
-      const newImage = await createImage(activities, mugColor);
+      const newImage = await createImage(activities, mugColor, strokeColor);
       set({ generatedImage: newImage });
       return newImage;
     } catch (error) {
@@ -45,9 +45,12 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   setGeneratedImage: (image) => set({ generatedImage: image }),
 }));
 
-// Subscribe to controlsStore to regenerate image on mugColor change
+// Subscribe to controlsStore to regenerate image on mugColor or strokeColor change
 useControlsStore.subscribe((state, prevState) => {
-  if (state.mugColor !== prevState.mugColor) {
+  if (
+    state.mugColor !== prevState.mugColor ||
+    state.strokeColor !== prevState.strokeColor
+  ) {
     useActivityStore.getState().generateImage();
   }
 });

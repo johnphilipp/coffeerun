@@ -41,7 +41,7 @@ export default function AddToCartButton() {
         </button>
         <Link
           href="#"
-          className="mt-2 text-gray-400 hover:text-gray-300 flex items-center gap-1.5 hover:scale-105 transition-all duration-300"
+          className="mt-2 text-white hover:text-gray-300 flex items-center gap-1.5 hover:scale-105 transition-all duration-300"
         >
           Gift a friend
           <Gift size={16} />

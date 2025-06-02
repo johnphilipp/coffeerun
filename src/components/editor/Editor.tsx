@@ -20,7 +20,7 @@ export default function Editor({ activities }: EditorProps) {
   }, [activities, setActivities]);
 
   return (
-    <div className="h-screen flex flex-col -mt-12">
+    <div className="h-full flex flex-col">
       <AddToCartButton />
       <Scene />
       <Controls />
