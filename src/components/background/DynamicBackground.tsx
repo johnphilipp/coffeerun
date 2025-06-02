@@ -13,7 +13,7 @@ export default function DynamicBackground({
     <div
       className="h-screen flex flex-col"
       style={{
-        background: `radial-gradient(circle at 50% 60%, ${mugColor}cc 0%, #0d0d0d 120%)`,
+        background: `radial-gradient(circle at 50% 60%, ${mugColor}cc -20%, #0d0d0d 120%)`,
       }}
     >
       {children}
