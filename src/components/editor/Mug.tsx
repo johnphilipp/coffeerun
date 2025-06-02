@@ -1,10 +1,10 @@
 "use client";
 
+import { useActivityStore } from "@/store/activityStore";
 import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
-import { useActivityStore } from "@/store/activityStore";
 
 export default function Mug() {
   const meshRef = useRef<THREE.Mesh>(null);

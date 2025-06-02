@@ -4,9 +4,12 @@ import Mug from "@/components/editor/Mug";
 import {
   ContactShadows,
   Environment,
+  Html,
   PresentationControls,
 } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
+import { Loader2 } from "lucide-react";
+import { Suspense } from "react";
 import * as THREE from "three";
 
 export default function Scene() {
@@ -34,7 +37,15 @@ export default function Scene() {
         polar={[-Math.PI / 3, Math.PI / 3]}
         azimuth={[-Math.PI / 1.4, Math.PI / 2]}
       >
-        <Mug />
+        <Suspense
+          fallback={
+            <Html center>
+              <Loader2 className="w-10 h-10 animate-spin text-white/80" />
+            </Html>
+          }
+        >
+          <Mug />
+        </Suspense>
       </PresentationControls>
 
       <ContactShadows

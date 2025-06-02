@@ -1,13 +1,12 @@
-import { create } from "zustand";
+import { useControlsStore } from "@/store/controlsStore";
 import { Activity } from "@/types/activity";
 import { createImage } from "@/utils/createImage";
-import { useControlsStore } from "./controlsStore";
+import { create } from "zustand";
 
 interface ActivityState {
   activities: Activity[];
   filteredActivities: Activity[];
   generatedImage: string;
-  isGenerating: boolean;
   setActivities: (activities: Activity[]) => void;
   setFilteredActivities: (activities: Activity[]) => void;
   generateImage: () => Promise<string>;
@@ -18,17 +17,14 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   activities: [],
   filteredActivities: [],
   generatedImage: "/assets/images/demoImage.jpg", // Default placeholder
-  isGenerating: false,
 
   setActivities: (activities) => {
     set({ activities });
-    // Trigger image generation when activities change
     get().generateImage();
   },
 
   setFilteredActivities: (filteredActivities) => {
     set({ filteredActivities });
-    // Trigger image generation when filtered activities change
     get().generateImage();
   },
 
@@ -36,15 +32,12 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
     const { activities } = get();
     const { mugColor } = useControlsStore.getState();
 
-    set({ isGenerating: true });
-
     try {
       const newImage = await createImage(activities, mugColor);
-      set({ generatedImage: newImage, isGenerating: false });
+      set({ generatedImage: newImage });
       return newImage;
     } catch (error) {
       console.error("Error generating image:", error);
-      set({ isGenerating: false });
       return get().generatedImage; // Return current image on error
     }
   },

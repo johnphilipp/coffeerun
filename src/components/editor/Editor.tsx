@@ -1,36 +1,30 @@
 "use client";
 
+import AddToCartButton from "@/components/editor/AddToCartButton";
+import CartDrawer from "@/components/editor/CartDrawer";
+import Controls from "@/components/editor/Controls";
 import Scene from "@/components/editor/Scene";
+import { useActivityStore } from "@/store/activityStore";
 import { Activity } from "@/types/activity";
-import Controls from "./Controls";
-import AddToCartButton from "./AddToCartButton";
-import CartDrawer from "./CartDrawer";
-import { useActivityImageGeneration } from "@/hooks/useActivityImageGeneration";
-import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
 
 interface EditorProps {
   activities: Activity[];
 }
 
 export default function Editor({ activities }: EditorProps) {
-  const { isGenerating } = useActivityImageGeneration(activities);
+  const setActivities = useActivityStore((state) => state.setActivities);
 
-  if (isGenerating) {
-    return (
-      <div className="h-screen flex items-center justify-center -mt-12">
-        <Loader2 className="w-10 h-10 animate-spin text-white" />
-      </div>
-    );
-  }
+  useEffect(() => {
+    setActivities(activities);
+  }, [activities, setActivities]);
 
   return (
-    <div className="h-screen flex flex-col">
-      <div className="flex-1 -mt-12">
-        <AddToCartButton />
-        <Scene />
-        <Controls />
-        <CartDrawer />
-      </div>
+    <div className="h-screen flex flex-col -mt-12">
+      <AddToCartButton />
+      <Scene />
+      <Controls />
+      <CartDrawer />
     </div>
   );
 }
