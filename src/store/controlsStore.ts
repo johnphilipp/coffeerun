@@ -1,21 +1,24 @@
-import { create } from "zustand";
+import { activityTypeDefinitions } from "@/config/activityTypeDefinitions";
+import { ActivityTypeDefinition } from "@/types/activityTypeDefinition";
 import { areColorsTooSimilar, getContrastingColor } from "@/utils/colorUtils";
-import { activityTypes } from "@/config/activityTypes";
+import { create } from "zustand";
 
 interface ControlsState {
   mugColor: string;
   strokeColor: string;
-  selectedActivityTypes: string[];
+  selectedActivityTypes: ActivityTypeDefinition[];
   setMugColor: (color: string) => void;
   setStrokeColor: (color: string) => void;
-  toggleActivityType: (type: string) => void;
-  setSelectedActivityTypes: (types: string[]) => void;
+  toggleActivityType: (toggledActivityType: ActivityTypeDefinition) => void;
+  setSelectedActivityTypes: (
+    selectedActivityTypes: ActivityTypeDefinition[]
+  ) => void;
 }
 
 export const useControlsStore = create<ControlsState>((set, get) => ({
   mugColor: "#000000", // Default mug color
   strokeColor: "#ffffff", // Default stroke color
-  selectedActivityTypes: activityTypes.map((type) => type.type), // All types selected by default
+  selectedActivityTypes: activityTypeDefinitions,
 
   setMugColor: (color) => {
     const { strokeColor } = get();
@@ -41,24 +44,26 @@ export const useControlsStore = create<ControlsState>((set, get) => ({
     }
   },
 
-  toggleActivityType: (type) => {
+  toggleActivityType: (toggledActivityType) => {
     const { selectedActivityTypes } = get();
-    const isSelected = selectedActivityTypes.includes(type);
+    const isSelected = selectedActivityTypes.includes(toggledActivityType);
 
     if (isSelected) {
       // Remove if already selected
       set({
-        selectedActivityTypes: selectedActivityTypes.filter((t) => t !== type),
+        selectedActivityTypes: selectedActivityTypes.filter(
+          (selectedActivityType) => selectedActivityType !== toggledActivityType
+        ),
       });
     } else {
       // Add if not selected
       set({
-        selectedActivityTypes: [...selectedActivityTypes, type],
+        selectedActivityTypes: [...selectedActivityTypes, toggledActivityType],
       });
     }
   },
 
-  setSelectedActivityTypes: (types) => {
-    set({ selectedActivityTypes: types });
+  setSelectedActivityTypes: (selectedActivityTypes) => {
+    set({ selectedActivityTypes: selectedActivityTypes });
   },
 }));

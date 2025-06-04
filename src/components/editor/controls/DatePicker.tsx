@@ -11,7 +11,7 @@ export default function DatePicker() {
       <PopoverTrigger>
         <Calendar className="text-white" style={{ scale: 1.2 }} />
       </PopoverTrigger>
-      <PopoverContent className="text-white">
+      <PopoverContent className="text-white" title="Date">
         Place content for the popover here.
       </PopoverContent>
     </Popover>

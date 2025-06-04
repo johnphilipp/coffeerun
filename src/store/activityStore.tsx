@@ -1,16 +1,23 @@
+import { activityTypeDefinitions } from "@/config/activityTypeDefinitions";
 import { useControlsStore } from "@/store/controlsStore";
 import { Activity } from "@/types/activity";
+import { ActivityTypeDefinition } from "@/types/activityTypeDefinition";
 import { createImage } from "@/utils/imageUtils";
+import { ActivityIcon } from "lucide-react";
 import { create } from "zustand";
 
 interface ActivityState {
   activities: Activity[];
   validActivities: Activity[];
   filteredActivities: Activity[];
+  activityTypes: ActivityTypeDefinition[];
+  validActivityTypes: ActivityTypeDefinition[];
   generatedImage: string;
   setActivities: (activities: Activity[]) => void;
-  validateActivities: () => void;
-  filterActivities: () => void;
+  setValidActivities: () => void;
+  setFilteredActivities: () => void;
+  setActivityTypes: () => void;
+  setValidActivityTypes: () => void;
   generateImage: () => Promise<string>;
   setGeneratedImage: (image: string) => void;
 }
@@ -19,16 +26,20 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   activities: [],
   validActivities: [],
   filteredActivities: [],
+  activityTypes: [],
+  validActivityTypes: [],
   generatedImage: "/assets/images/demoImage.jpg", // Default placeholder
 
   setActivities: (activities) => {
     set({ activities });
-    get().validateActivities(); // Filter out activities without polylines
-    get().filterActivities(); // Filter based on current controls selection
+    get().setValidActivities(); // Filter out activities without polylines
+    get().setFilteredActivities(); // Filter based on current controls selection
+    get().setActivityTypes();
+    get().setValidActivityTypes();
     get().generateImage(); // Regenerate image when new activities are set
   },
 
-  validateActivities: () => {
+  setValidActivities: () => {
     const { activities } = get();
     const validActivities = activities.filter(
       (activity) =>
@@ -38,13 +49,42 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
     set({ validActivities });
   },
 
-  filterActivities: () => {
+  setFilteredActivities: () => {
     const { validActivities } = get();
     const { selectedActivityTypes } = useControlsStore.getState();
     const filteredActivities = validActivities.filter((activity) =>
-      selectedActivityTypes.includes(activity.type || activity.sport_type)
+      selectedActivityTypes.some(
+        (type) =>
+          type.type === activity.type || type.type === activity.sport_type
+      )
     );
     set({ filteredActivities });
+  },
+
+  setActivityTypes: () => {
+    const { activities } = get();
+    const activityTypes = Array.from(
+      new Set(activities.map((activity) => activity.type))
+    ).map((type) => ({
+      type: type,
+      label:
+        activityTypeDefinitions.find((definition) => definition.type === type)
+          ?.label || type,
+      icon: activityTypeDefinitions.find(
+        (definition) => definition.type === type
+      )?.icon || <ActivityIcon className="text-white" style={{ scale: 1.2 }} />,
+    }));
+    set({ activityTypes });
+  },
+
+  setValidActivityTypes: () => {
+    const { activityTypes, validActivities } = get();
+
+    const validActivityTypes = activityTypes.filter((activityType) =>
+      validActivities.some((activity) => activityType.type === activity.type)
+    );
+    set({ validActivityTypes });
+    useControlsStore.getState().setSelectedActivityTypes(validActivityTypes);
   },
 
   generateImage: async () => {
@@ -72,7 +112,7 @@ useControlsStore.subscribe((state, prevState) => {
   if (mugColorChanged || strokeColorChanged || activityTypesChanged) {
     if (activityTypesChanged) {
       // If activity types changed, filter activities first
-      useActivityStore.getState().filterActivities();
+      useActivityStore.getState().setFilteredActivities();
     }
     // Then, generate the image (which will use the latest filteredActivities)
     useActivityStore.getState().generateImage();

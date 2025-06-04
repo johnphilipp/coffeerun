@@ -4,44 +4,43 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useActivityStore } from "@/store/activityStore";
 import { useControlsStore } from "@/store/controlsStore";
 import { Check, Dumbbell } from "lucide-react";
 import React from "react";
-import { activityTypes } from "@/config/activityTypes";
 
 export default function ActivityTypePicker() {
   const { selectedActivityTypes, toggleActivityType } = useControlsStore();
+  const { validActivityTypes } = useActivityStore();
 
   return (
     <Popover>
       <PopoverTrigger>
         <Dumbbell className="text-white" style={{ scale: 1.2 }} />
       </PopoverTrigger>
-      <PopoverContent className="text-white min-w-64">
-        <h4 className="font-medium mb-2 -mt-1 text-white">Activity Types</h4>
+      <PopoverContent className="text-white min-w-64" title="Activity Types">
         <div className="grid gap-2">
-          {activityTypes.map((activity) => {
-            const isSelected = selectedActivityTypes.includes(activity.type);
+          {validActivityTypes.map((activityType) => {
+            const isSelected = selectedActivityTypes.includes(activityType);
             return (
               <button
-                key={activity.type}
+                key={activityType.type}
                 className={cn(
-                  "bg-accent/10 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white hover:bg-accent/20 hover:cursor-pointer hover:scale-105 transition-all duration-300",
-                  isSelected &&
-                    "bg-accent text-accent-foreground hover:text-white"
+                  "bg-accent/10 border border-accent/0 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white hover:bg-accent/20 hover:cursor-pointer hover:scale-105 transition-all duration-300",
+                  isSelected && "bg-accent/20 border border-accent/40"
                 )}
-                onClick={() => toggleActivityType(activity.type)}
+                onClick={() => toggleActivityType(activityType)}
               >
                 <span>
-                  {React.cloneElement(activity.icon, {
+                  {React.cloneElement(activityType.icon, {
                     className: "w-6 h-6",
                     style: { scale: 1 },
                   })}
                 </span>
                 <span className="font-medium flex-1 text-left">
-                  {activity.label}
+                  {activityType.label}
                 </span>
-                {isSelected && <Check className="w-4 h-4 text-green-600" />}
+                {isSelected && <Check className="w-4 h-4 text-accent" />}
               </button>
             );
           })}

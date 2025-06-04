@@ -11,7 +11,7 @@ export default function ActivityPicker() {
       <PopoverTrigger>
         <ListTodo className="text-white" style={{ scale: 1.2 }} />
       </PopoverTrigger>
-      <PopoverContent className="text-white">
+      <PopoverContent className="text-white" title="Activity Types">
         Place content for the popover here.
       </PopoverContent>
     </Popover>

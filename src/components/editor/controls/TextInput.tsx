@@ -11,7 +11,7 @@ export default function TextInput() {
       <PopoverTrigger>
         <TextCursorInput className="text-white" style={{ scale: 1.2 }} />
       </PopoverTrigger>
-      <PopoverContent className="text-white">
+      <PopoverContent className="text-white" title="Text">
         Place content for the popover here.
       </PopoverContent>
     </Popover>

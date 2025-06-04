@@ -24,8 +24,7 @@ export default function MugColorPicker() {
       <PopoverTrigger>
         <Circle style={{ fill: mugColor, color: mugColor, scale: 1.2 }} />
       </PopoverTrigger>
-      <PopoverContent>
-        <h4 className="font-medium mb-2 -mt-1 text-white">Mug Color</h4>
+      <PopoverContent title="Mug Color">
         <div className="flex gap-2">
           {colors.map((color) => (
             <button

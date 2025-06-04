@@ -27,8 +27,7 @@ export default function StrokeColorPicker() {
           style={{ stroke: strokeColor, strokeWidth: 3, scale: 1.2 }}
         />
       </PopoverTrigger>
-      <PopoverContent>
-        <h4 className="font-medium mb-2 -mt-1 text-white">Stroke Color</h4>
+      <PopoverContent title="Stroke Color">
         <div className="flex gap-2">
           {colors.map((color) => (
             <button
