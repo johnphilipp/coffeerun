@@ -12,12 +12,14 @@ interface ActivityState {
   filteredActivities: Activity[];
   activityTypes: ActivityTypeDefinition[];
   validActivityTypes: ActivityTypeDefinition[];
+  years: number[];
   generatedImage: string;
   setActivities: (activities: Activity[]) => void;
   setValidActivities: () => void;
   setFilteredActivities: () => void;
   setActivityTypes: () => void;
   setValidActivityTypes: () => void;
+  setYears: () => void;
   generateImage: () => Promise<string>;
   setGeneratedImage: (image: string) => void;
 }
@@ -28,14 +30,16 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   filteredActivities: [],
   activityTypes: [],
   validActivityTypes: [],
+  years: [],
   generatedImage: "/assets/images/demoImage.jpg", // Default placeholder
 
   setActivities: (activities) => {
     set({ activities });
     get().setValidActivities(); // Filter out activities without polylines
-    get().setFilteredActivities(); // Filter based on current controls selection
     get().setActivityTypes();
     get().setValidActivityTypes();
+    get().setYears();
+    get().setFilteredActivities(); // Filter based on current controls selection
     get().generateImage(); // Regenerate image when new activities are set
   },
 
@@ -51,13 +55,31 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 
   setFilteredActivities: () => {
     const { validActivities } = get();
-    const { selectedActivityTypes } = useControlsStore.getState();
-    const filteredActivities = validActivities.filter((activity) =>
-      selectedActivityTypes.some(
+    const { selectedActivityTypes, selectedDateRange } =
+      useControlsStore.getState();
+    const filteredActivities = validActivities.filter((activity) => {
+      const activityDate = new Date(activity.start_date_local);
+      let inDateRange = true;
+      if (selectedDateRange?.from) {
+        const fromDate = new Date(selectedDateRange.from);
+        fromDate.setHours(0, 0, 0, 0);
+
+        const toDate = selectedDateRange.to
+          ? new Date(selectedDateRange.to)
+          : new Date(selectedDateRange.from);
+        toDate.setHours(23, 59, 59, 999);
+
+        inDateRange = activityDate >= fromDate && activityDate <= toDate;
+      }
+
+      const isTypeMatch = selectedActivityTypes.some(
         (type) =>
           type.type === activity.type || type.type === activity.sport_type
-      )
-    );
+      );
+
+      return isTypeMatch && inDateRange;
+    });
+    console.log(filteredActivities);
     set({ filteredActivities });
   },
 
@@ -78,13 +100,33 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   },
 
   setValidActivityTypes: () => {
-    const { activityTypes, validActivities } = get();
+    const { activityTypes, validActivities } = get(); // TODO: Maybe update from validActivities to filteredActivities to not show unavailable ones
 
     const validActivityTypes = activityTypes.filter((activityType) =>
       validActivities.some((activity) => activityType.type === activity.type)
     );
     set({ validActivityTypes });
     useControlsStore.getState().setSelectedActivityTypes(validActivityTypes);
+  },
+
+  setYears: () => {
+    const { validActivities } = get();
+    const years = Array.from(
+      new Set(
+        validActivities.map((activity) =>
+          new Date(activity.start_date_local).getFullYear()
+        )
+      )
+    ).sort((a, b) => b - a);
+    set({ years: years });
+
+    if (years.length > 0) {
+      const latestYear = years[0];
+      useControlsStore.getState().setSelectedDateRange({
+        from: new Date(latestYear, 0, 1),
+        to: new Date(latestYear, 11, 31),
+      });
+    }
   },
 
   generateImage: async () => {
@@ -108,9 +150,17 @@ useControlsStore.subscribe((state, prevState) => {
   const activityTypesChanged =
     JSON.stringify(state.selectedActivityTypes) !==
     JSON.stringify(prevState.selectedActivityTypes);
+  const dateRangeChanged =
+    JSON.stringify(state.selectedDateRange) !==
+    JSON.stringify(prevState.selectedDateRange);
 
-  if (mugColorChanged || strokeColorChanged || activityTypesChanged) {
-    if (activityTypesChanged) {
+  if (
+    mugColorChanged ||
+    strokeColorChanged ||
+    activityTypesChanged ||
+    dateRangeChanged
+  ) {
+    if (activityTypesChanged || dateRangeChanged) {
       // If activity types changed, filter activities first
       useActivityStore.getState().setFilteredActivities();
     }
