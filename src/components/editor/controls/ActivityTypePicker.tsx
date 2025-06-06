@@ -26,7 +26,7 @@ export default function ActivityTypePicker() {
               <button
                 key={activityType.type}
                 className={cn(
-                  "bg-accent/10 border border-accent/0 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white hover:bg-accent/20 hover:cursor-pointer hover:scale-105 transition-all duration-300",
+                  "bg-accent border border-accent/0 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white hover:bg-accent/20 hover:cursor-pointer hover:scale-105 transition-all duration-300",
                   isSelected && "bg-accent/20 border border-accent/20"
                 )}
                 onClick={() => toggleActivityType(activityType)}
