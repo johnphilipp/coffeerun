@@ -22,6 +22,9 @@ export default function Scene() {
         toneMapping: THREE.ACESFilmicToneMapping,
         toneMappingExposure: 1,
       }}
+      style={{
+        touchAction: "none",
+      }}
     >
       <Environment preset="forest" />
 
