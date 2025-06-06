@@ -1,9 +1,23 @@
 import { ActivityTypeDefinition } from "@/types/activityTypeDefinition";
 import { Dumbbell } from "lucide-react";
-import { FaHiking, FaRunning, FaWalking } from "react-icons/fa";
-import { GiWeightLiftingUp } from "react-icons/gi";
+import {
+  FaHiking,
+  FaRunning,
+  FaSkiing,
+  FaSkiingNordic,
+  FaSnowboarding,
+  FaWalking,
+} from "react-icons/fa";
+import { GiMountainClimbing, GiWeightLiftingUp } from "react-icons/gi";
+import { GrYoga } from "react-icons/gr";
 import { LuBike } from "react-icons/lu";
-import { MdElectricBike, MdKayaking } from "react-icons/md";
+import {
+  MdElectricBike,
+  MdGolfCourse,
+  MdKayaking,
+  MdRowing,
+  MdSurfing,
+} from "react-icons/md";
 
 export const activityTypeDefinitions: ActivityTypeDefinition[] = [
   {
@@ -45,5 +59,45 @@ export const activityTypeDefinitions: ActivityTypeDefinition[] = [
     type: "Kayaking",
     label: "Kayaking",
     icon: <MdKayaking className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "AlpineSki",
+    label: "Alpine Ski",
+    icon: <FaSkiing className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "NordicSki",
+    label: "Nordic Ski",
+    icon: <FaSkiingNordic className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "Snowboard",
+    label: "Snowboard",
+    icon: <FaSnowboarding className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "Surfing",
+    label: "Surfing",
+    icon: <MdSurfing className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "Golf",
+    label: "Golf",
+    icon: <MdGolfCourse className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "RockClimbing",
+    label: "Rock Climbing",
+    icon: <GiMountainClimbing className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "Yoga",
+    label: "Yoga",
+    icon: <GrYoga className="text-white" style={{ scale: 1.2 }} />,
+  },
+  {
+    type: "Rowing",
+    label: "Rowing",
+    icon: <MdRowing className="text-white" style={{ scale: 1.2 }} />,
   },
 ];
