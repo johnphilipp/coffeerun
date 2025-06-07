@@ -26,10 +26,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section className="flex flex-col gap-3 p-6 items-center">
+        <section className="flex flex-col gap-3 sm:gap-6 p-6 items-center">
           <Button
             onClick={() => signIn("strava", { redirectTo: "/editor" })}
-            className="w-full hover:cursor-pointer flex items-center gap-3 h-12 text-lg bg-[#fc4c02] hover:bg-[#fc4c02]/80 max-w-md hover:scale-105 transition-all duration-300"
+            className="bg-[#fc4c02] hover:bg-[#fc4c02] w-full flex items-center gap-3 h-12 sm:text-lg max-w-md"
             variant="default"
           >
             <FaStrava style={{ transform: "scale(1.7)" }} />
@@ -37,10 +37,7 @@ export default function Home() {
           </Button>
 
           <Link href="/" className="w-full max-w-md">
-            <Button
-              className="w-full hover:cursor-pointer flex items-center gap-3 h-12 text-lg hover:scale-105 transition-all duration-300"
-              variant="outline"
-            >
+            <Button className="w-full flex items-center gap-3 h-12 sm:text-lg">
               <FaGift style={{ transform: "scale(1.5)" }} />
               Gift a friend
             </Button>
@@ -48,7 +45,7 @@ export default function Home() {
 
           <Link
             href="/demo"
-            className="text-sm text-gray-500 hover:text-gray-700 transition-colors duration-200 inline-flex items-center justify-center gap-1 hover:scale-105 transition-all duration-300"
+            className="text-sm sm:text-lg text-gray-500 hover:text-gray-400 transition-colors duration-200 inline-flex items-center justify-center gap-1 hover:scale-105 transition-all duration-300"
           >
             View a demo
             <ChevronRight className="w-4 h-4" />

@@ -9,9 +9,12 @@ export default function TextInput() {
   return (
     <Popover>
       <PopoverTrigger>
-        <TextCursorInput className="text-white" style={{ scale: 1.2 }} />
+        <TextCursorInput
+          className="text-primary-foreground"
+          style={{ scale: 1.2 }}
+        />
       </PopoverTrigger>
-      <PopoverContent className="text-white" title="Text">
+      <PopoverContent title="Text">
         Place content for the popover here.
       </PopoverContent>
     </Popover>

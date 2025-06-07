@@ -7,26 +7,22 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { useActivityStore } from "@/store/activityStore";
 import { useControlsStore } from "@/store/controlsStore";
 import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { CalendarIcon, Check } from "lucide-react";
 
 export default function DatePicker() {
   return (
     <Popover>
       <PopoverTrigger>
-        <CalendarIcon className="text-white" style={{ scale: 1.2 }} />
+        <CalendarIcon
+          className="text-primary-foreground"
+          style={{ scale: 1.2 }}
+        />
       </PopoverTrigger>
-      <PopoverContent className="text-white" title="Date Range">
+      <PopoverContent title="Date Range">
         <DatePickerWithRange />
       </PopoverContent>
     </Popover>
@@ -34,69 +30,76 @@ export default function DatePicker() {
 }
 
 export function DatePickerWithRange() {
-  const { selectedDateRange, setSelectedDateRange } = useControlsStore();
+  const { selectedDateRange, setSelectedDateRange, toggleYear, selectedYears } =
+    useControlsStore();
   const { years } = useActivityStore();
+  console.log("selectedYears", selectedYears);
+  console.log("selectedDateRange", selectedDateRange);
 
   return (
-    <div className={cn("grid gap-2")}>
-      <Popover>
-        <PopoverTrigger asChild>
-          <Button
-            id="date"
-            className={cn(
-              "w-full justify-start text-left font-normal bg-accent/10 hover:bg-accent/20 hover:cursor-pointer hover:scale-105 transition-all duration-300",
-              !selectedDateRange && "text-muted-foreground"
-            )}
-          >
-            <CalendarIcon />
-            {selectedDateRange?.from ? (
-              selectedDateRange.to ? (
-                <>
-                  {format(selectedDateRange.from, "LLL dd, y")} -{" "}
-                  {format(selectedDateRange.to, "LLL dd, y")}
-                </>
-              ) : (
-                format(selectedDateRange.from, "LLL dd, y")
-              )
-            ) : (
-              <span>Pick a date</span>
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent
-          className="flex w-auto flex-col space-y-4 p-4"
-          align="start"
-        >
-          <Select
-            onValueChange={(value) =>
-              setSelectedDateRange({
-                from: new Date(parseInt(value), 0, 1),
-                to: new Date(parseInt(value), 11, 31),
-              })
-            }
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select" />
-            </SelectTrigger>
-            <SelectContent position="popper">
-              {years.map((year) => (
-                <SelectItem key={year} value={String(year)}>
-                  {year}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+    <div className="space-y-4">
+      <section className="space-y-2" aria-label="Select years">
+        <h3 className="text-sm font-medium">Select years</h3>
+        <div className="grid grid-cols-2 gap-2">
+          {years.map((year) => {
+            const isSelected = selectedYears.includes(year);
 
-          <Calendar
-            initialFocus
-            mode="range"
-            defaultMonth={selectedDateRange?.from}
-            selected={selectedDateRange}
-            onSelect={setSelectedDateRange}
-            numberOfMonths={1}
-          />
-        </PopoverContent>
-      </Popover>
+            return (
+              <Button
+                key={year}
+                onClick={() => toggleYear(year)}
+                className={cn(
+                  "flex items-center justify-start gap-3",
+                  isSelected && "bg-primary border border-border"
+                )}
+              >
+                {year}
+                {isSelected && <Check className="ml-auto" />}
+              </Button>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="space-y-2" aria-label="Select a range">
+        <h3 className="text-sm font-medium">Or select a range</h3>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              className={cn(
+                "min-w-60 flex items-center justify-start hover:scale-105 transition-all duration-300"
+              )}
+            >
+              <CalendarIcon />
+              {selectedDateRange?.from ? (
+                selectedDateRange.to ? (
+                  <>
+                    {format(selectedDateRange.from, "LLL dd, y")} -{" "}
+                    {format(selectedDateRange.to, "LLL dd, y")}
+                  </>
+                ) : (
+                  format(selectedDateRange.from, "LLL dd, y")
+                )
+              ) : (
+                <span>Pick a date</span>
+              )}
+            </Button>
+          </PopoverTrigger>
+
+          <PopoverContent
+            className="flex w-auto flex-col space-y-4 p-4"
+            align="start"
+          >
+            <Calendar
+              mode="range"
+              defaultMonth={selectedDateRange?.from}
+              selected={selectedDateRange}
+              onSelect={setSelectedDateRange}
+              numberOfMonths={1}
+            />
+          </PopoverContent>
+        </Popover>
+      </section>
     </div>
   );
 }

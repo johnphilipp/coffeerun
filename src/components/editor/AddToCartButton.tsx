@@ -28,7 +28,7 @@ export default function AddToCartButton() {
     <div className="absolute top-12 w-full z-10 flex justify-center">
       <div className="flex flex-col items-center">
         <button
-          className="mt-12 bg-white/10 text-white py-2 px-4 rounded-md flex items-center gap-2 hover:bg-white/15 cursor-pointer relative hover:scale-105 transition-all duration-300"
+          className="mt-12 bg-primary text-primary-foreground hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground py-2 px-4 rounded-md flex items-center gap-2 cursor-pointer relative hover:scale-105 transition-all duration-300"
           onClick={handleButtonClick}
         >
           <ShoppingCartIcon size={20} />
@@ -41,7 +41,7 @@ export default function AddToCartButton() {
         </button>
         <Link
           href="#"
-          className="mt-2 text-white hover:text-gray-300 flex items-center gap-1.5 hover:scale-105 transition-all duration-300"
+          className="mt-2 text-primary-foreground hover:text-accent-foreground focus:text-accent-foreground flex items-center gap-1.5 hover:scale-105 transition-all duration-300"
         >
           Gift a friend
           <Gift size={16} />

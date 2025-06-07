@@ -1,3 +1,4 @@
+import { Button } from "@/components/ui/button";
 import {
   Popover,
   PopoverContent,
@@ -16,32 +17,26 @@ export default function ActivityTypePicker() {
   return (
     <Popover>
       <PopoverTrigger>
-        <Dumbbell className="text-white" style={{ scale: 1.2 }} />
+        <Dumbbell className="text-primary-foreground" style={{ scale: 1.2 }} />
       </PopoverTrigger>
-      <PopoverContent className="text-white min-w-64" title="Activity Types">
+      <PopoverContent title="Activity Types">
         <div className="grid gap-2">
           {validActivityTypes.map((activityType) => {
             const isSelected = selectedActivityTypes.includes(activityType);
             return (
-              <button
+              <Button
+                size="lg"
                 key={activityType.type}
                 className={cn(
-                  "bg-accent border border-accent/0 flex items-center gap-3 rounded-md px-3 py-2 text-sm text-white hover:bg-accent/20 hover:cursor-pointer hover:scale-105 transition-all duration-300",
-                  isSelected && "bg-accent/20 border border-accent/20"
+                  "flex items-center justify-start gap-3",
+                  isSelected && "bg-primary border border-border"
                 )}
                 onClick={() => toggleActivityType(activityType)}
               >
-                <span>
-                  {React.cloneElement(activityType.icon, {
-                    className: "w-6 h-6",
-                    style: { scale: 1 },
-                  })}
-                </span>
-                <span className="font-medium flex-1 text-left">
-                  {activityType.label}
-                </span>
-                {isSelected && <Check className="w-4 h-4 text-accent" />}
-              </button>
+                {activityType.icon}
+                {activityType.label}
+                {isSelected && <Check className="ml-auto" />}
+              </Button>
             );
           })}
         </div>

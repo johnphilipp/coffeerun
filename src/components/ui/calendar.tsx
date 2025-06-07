@@ -4,7 +4,7 @@ import * as React from "react";
 import { DayPicker, getDefaultClassNames } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
-import { buttonVariants } from "./button";
+import { buttonVariants } from "@/components/ui/button";
 
 function Calendar({
   className,
@@ -16,7 +16,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-3", className)}
+      className={cn(className, "min-h-76")}
       classNames={{
         months: `relative flex ${defaultClassNames.month}`,
         month_caption: `relative mx-10 flex h-7 items-center justify-center ${defaultClassNames.month_caption}`,
@@ -32,13 +32,13 @@ function Calendar({
           classNames?.caption_label
         ),
         button_next: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute right-1 [&_svg]:fill-foreground",
+          buttonVariants({ variant: "default" }),
+          "flex items-center justify-center h-7 w-7 absolute right-1 [&_svg]:fill-primary-foreground",
           classNames?.button_next
         ),
         button_previous: cn(
-          buttonVariants({ variant: "outline" }),
-          "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100 absolute left-1 [&_svg]:fill-foreground",
+          buttonVariants({ variant: "default" }),
+          "flex items-center justify-center h-7 w-7 absolute left-1 [&_svg]:fill-primary-foreground",
           classNames?.button_previous
         ),
         nav: cn("flex items-start", classNames?.nav),
@@ -53,15 +53,15 @@ function Calendar({
           classNames?.day_button
         ),
         range_start: cn(
-          "bg-accent [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground day-range-start rounded-s-md",
+          "bg-primary [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground day-range-start rounded-s-md",
           classNames?.range_start
         ),
         range_middle: cn(
-          "bg-accent !text-foreground [&>button]:bg-transparent [&>button]:!text-foreground [&>button]:hover:bg-transparent [&>button]:hover:!text-foreground",
+          "bg-primary !text-primary-foreground [&>button]:bg-transparent [&>button]:!text-primary-foreground/50 [&>button]:hover:bg-transparent [&>button]:hover:!text-primary-foreground",
           classNames?.range_middle
         ),
         range_end: cn(
-          "bg-accent [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground day-range-end rounded-e-md",
+          "bg-primary [&>button]:bg-primary [&>button]:text-primary-foreground [&>button]:hover:bg-primary [&>button]:hover:text-primary-foreground day-range-end rounded-e-md",
           classNames?.range_end
         ),
         selected: cn(
@@ -69,11 +69,11 @@ function Calendar({
           classNames?.selected
         ),
         today: cn(
-          "[&>button]:bg-accent [&>button]:text-accent-foreground",
+          "[&>button]:bg-primary [&>button]:text-primary-foreground",
           classNames?.today
         ),
         outside: cn(
-          "day-outside text-muted-foreground opacity-50 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+          "day-outside text-primary-foreground/50 aria-selected:text-primary-foreground",
           classNames?.outside
         ),
         disabled: cn("text-muted-foreground opacity-50", classNames?.disabled),

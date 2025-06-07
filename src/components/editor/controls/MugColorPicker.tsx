@@ -15,6 +15,7 @@ export default function MugColorPicker() {
     "#ffffff",
     "#e4c192",
     "#ff0000",
+    "#f4a8ff",
     "#00ff00",
     "#0000ff",
   ];
@@ -30,8 +31,8 @@ export default function MugColorPicker() {
             <button
               key={color}
               className={cn(
-                "rounded-full hover:scale-110 transition-all duration-300 hover:opacity-90 hover:cursor-pointer",
-                color === mugColor && "ring-2 ring-white/50"
+                "rounded-full hover:scale-110 transition-all duration-300 hover:cursor-pointer",
+                color === mugColor && "ring-3 ring-ring"
               )}
               onClick={() => setMugColor(color)}
             >

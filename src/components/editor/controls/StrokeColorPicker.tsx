@@ -15,6 +15,7 @@ export default function StrokeColorPicker() {
     "#000000",
     "#ff0000",
     "#00ff00",
+    "#f4a8ff",
     "#0000ff",
     "#ffff00",
   ];
@@ -23,7 +24,7 @@ export default function StrokeColorPicker() {
     <Popover>
       <PopoverTrigger>
         <Circle
-          className="text-white"
+          className="text-primary-foreground"
           style={{ stroke: strokeColor, strokeWidth: 3, scale: 1.2 }}
         />
       </PopoverTrigger>
@@ -33,15 +34,12 @@ export default function StrokeColorPicker() {
             <button
               key={color}
               className={cn(
-                "rounded-full hover:scale-110 transition-all duration-300 hover:opacity-90 hover:cursor-pointer",
-                color === strokeColor && "ring-2 ring-white/50"
+                "rounded-full hover:scale-110 transition-all duration-300 hover:cursor-pointer",
+                color === strokeColor && "ring-3 ring-ring"
               )}
               onClick={() => setStrokeColor(color)}
             >
-              <Circle
-                className="text-white"
-                style={{ stroke: color, strokeWidth: 3 }}
-              />
+              <Circle style={{ stroke: color, strokeWidth: 3 }} />
             </button>
           ))}
         </div>

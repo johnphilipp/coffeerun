@@ -5,6 +5,7 @@ import { ActivityTypeDefinition } from "@/types/activityTypeDefinition";
 import { createImage } from "@/utils/imageUtils";
 import { ActivityIcon } from "lucide-react";
 import { create } from "zustand";
+import { isEqual } from "lodash";
 
 interface ActivityState {
   activities: Activity[];
@@ -126,6 +127,7 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
         from: new Date(latestYear, 0, 1),
         to: new Date(latestYear, 11, 31),
       });
+      useControlsStore.getState().toggleYear(latestYear);
     }
   },
 
@@ -147,12 +149,14 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 useControlsStore.subscribe((state, prevState) => {
   const mugColorChanged = state.mugColor !== prevState.mugColor;
   const strokeColorChanged = state.strokeColor !== prevState.strokeColor;
-  const activityTypesChanged =
-    JSON.stringify(state.selectedActivityTypes) !==
-    JSON.stringify(prevState.selectedActivityTypes);
-  const dateRangeChanged =
-    JSON.stringify(state.selectedDateRange) !==
-    JSON.stringify(prevState.selectedDateRange);
+  const activityTypesChanged = !isEqual(
+    state.selectedActivityTypes,
+    prevState.selectedActivityTypes
+  );
+  const dateRangeChanged = !isEqual(
+    state.selectedDateRange,
+    prevState.selectedDateRange
+  );
 
   if (
     mugColorChanged ||

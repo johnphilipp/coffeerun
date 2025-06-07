@@ -15,24 +15,13 @@ export const hexToRgb = (hex: string) => {
 /**
  * Checks if two colors are too similar based on RGB distance
  */
-export const areColorsTooSimilar = (
-  color1: string,
-  color2: string
-): boolean => {
+export const areColorsSame = (color1: string, color2: string): boolean => {
   const rgb1 = hexToRgb(color1);
   const rgb2 = hexToRgb(color2);
 
   if (!rgb1 || !rgb2) return false;
 
-  // Calculate color difference using a simple Euclidean distance
-  const diff = Math.sqrt(
-    Math.pow(rgb1.r - rgb2.r, 2) +
-      Math.pow(rgb1.g - rgb2.g, 2) +
-      Math.pow(rgb1.b - rgb2.b, 2)
-  );
-
-  // If the difference is less than 100, consider them too similar
-  return diff < 100;
+  return rgb1.r === rgb2.r && rgb1.g === rgb2.g && rgb1.b === rgb2.b;
 };
 
 /**
