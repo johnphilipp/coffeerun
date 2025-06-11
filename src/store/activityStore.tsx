@@ -58,6 +58,12 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
     const { validActivities } = get();
     const { selectedActivityTypes, selectedDateRange } =
       useControlsStore.getState();
+
+    if (!selectedDateRange) {
+      set({ filteredActivities: [] });
+      return;
+    }
+
     const filteredActivities = validActivities.filter((activity) => {
       const activityDate = new Date(activity.start_date_local);
       let inDateRange = true;
@@ -80,7 +86,6 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
 
       return isTypeMatch && inDateRange;
     });
-    console.log(filteredActivities);
     set({ filteredActivities });
   },
 
