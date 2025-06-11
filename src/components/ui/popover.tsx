@@ -27,9 +27,8 @@ function PopoverContent({
   className,
   align = "center",
   sideOffset = 4,
-  title,
   ...props
-}: React.ComponentProps<typeof PopoverPrimitive.Content> & { title?: string }) {
+}: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
@@ -41,11 +40,6 @@ function PopoverContent({
           className
         )}
       >
-        {title && (
-          <h4 className="font-medium text-popover-foreground border-b -mx-4 px-4 mb-4 pb-2 -mt-2">
-            {title}
-          </h4>
-        )}
         {props.children}
       </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>

@@ -16,7 +16,7 @@ function Calendar({
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn(className, "min-h-76")}
+      className={className}
       classNames={{
         months: `relative flex ${defaultClassNames.month}`,
         month_caption: `relative mx-10 flex h-7 items-center justify-center ${defaultClassNames.month_caption}`,
@@ -49,7 +49,7 @@ function Calendar({
           classNames?.day
         ),
         day_button: cn(
-          "size-8 rounded-md p-0 font-normal transition-none aria-selected:opacity-100",
+          "size-8 rounded-md p-0 font-normal transition-none aria-selected:opacity-100 hover:scale-110 transition-all duration-300 hover:cursor-pointer",
           classNames?.day_button
         ),
         range_start: cn(

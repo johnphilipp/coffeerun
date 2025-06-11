@@ -22,19 +22,20 @@ export default function DatePicker() {
           style={{ scale: 1.2 }}
         />
       </PopoverTrigger>
-      <PopoverContent title="Date Range">
+      <PopoverContent>
+        <div className="flex items-center justify-between border-b -mx-4 px-4 mb-4 pb-2 -mt-1">
+          <h4 className="font-medium text-popover-foreground">Date Range</h4>
+        </div>
         <DatePickerWithRange />
       </PopoverContent>
     </Popover>
   );
 }
 
-export function DatePickerWithRange() {
+function DatePickerWithRange() {
   const { selectedDateRange, setSelectedDateRange, toggleYear, selectedYears } =
     useControlsStore();
   const { years } = useActivityStore();
-  console.log("selectedYears", selectedYears);
-  console.log("selectedDateRange", selectedDateRange);
 
   return (
     <div className="space-y-4">
@@ -87,7 +88,7 @@ export function DatePickerWithRange() {
           </PopoverTrigger>
 
           <PopoverContent
-            className="flex w-auto flex-col space-y-4 p-4"
+            className="flex w-auto flex-col space-y-4 p-4 min-h-84"
             align="start"
           >
             <Calendar
