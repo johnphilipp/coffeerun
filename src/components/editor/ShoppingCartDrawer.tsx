@@ -48,7 +48,7 @@ export default function ShoppingCartDrawer() {
                   angle={0.3}
                   penumbra={0.8}
                 />
-                <Environment files="/assets/hdr/potsdamer_platz_1k.hdr" />
+                <Environment files="/assets/hdr/forest_slope_1k.hdr" />
                 <PresentationControls
                   global
                   snap={true}

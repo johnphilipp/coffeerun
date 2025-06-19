@@ -26,8 +26,7 @@ export default function Scene() {
         touchAction: "none",
       }}
     >
-      <Environment preset="forest" />
-
+      <Environment files="/assets/hdr/forest_slope_1k.hdr" />
       <PresentationControls
         global
         snap
@@ -45,7 +44,6 @@ export default function Scene() {
           <Mug />
         </Suspense>
       </PresentationControls>
-
       <ContactShadows
         position={[0, -7.5, 0]}
         opacity={0.8}
