@@ -29,7 +29,7 @@ export default function StrokeColorPicker() {
         />
       </PopoverTrigger>
       <PopoverContent>
-        <div className="flex items-center justify-between border-b -mx-4 px-4 mb-4 pb-2 -mt-1">
+        <div className="flex items-center justify-between -mx-4 px-4 mb-4 -mt-1">
           <h4 className="font-medium text-popover-foreground">Stroke Color</h4>
         </div>
         <div className="flex gap-2">

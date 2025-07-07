@@ -52,11 +52,12 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
         activity.map.summary_polyline.length > 0
     );
     set({ validActivities });
+    useControlsStore.getState().setSelectedActivities(validActivities);
   },
 
   setFilteredActivities: () => {
     const { validActivities } = get();
-    const { selectedActivityTypes, selectedDateRange } =
+    const { selectedActivityTypes, selectedDateRange, selectedActivities } =
       useControlsStore.getState();
 
     if (!selectedDateRange) {
@@ -84,7 +85,19 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
           type.type === activity.type || type.type === activity.sport_type
       );
 
-      return isTypeMatch && inDateRange;
+      // Determine whether the current activity passes the activity-selection filter:
+      // 1. If no activities are selected (array length === 0) -> nothing should pass.
+      // 2. If all activities are selected (array length === validActivities.length) -> everything passes.
+      // 3. Otherwise only explicitly selected activities pass.
+
+      let isActivitySelected = true;
+      if (selectedActivities.length === 0) {
+        isActivitySelected = false;
+      } else if (selectedActivities.length !== validActivities.length) {
+        isActivitySelected = selectedActivities.includes(activity);
+      }
+
+      return isTypeMatch && inDateRange && isActivitySelected;
     });
     set({ filteredActivities });
   },
@@ -158,6 +171,10 @@ useControlsStore.subscribe((state, prevState) => {
     state.selectedActivityTypes,
     prevState.selectedActivityTypes
   );
+  const activitiesChanged = !isEqual(
+    state.selectedActivities,
+    prevState.selectedActivities
+  );
   const dateRangeChanged = !isEqual(
     state.selectedDateRange,
     prevState.selectedDateRange
@@ -167,13 +184,14 @@ useControlsStore.subscribe((state, prevState) => {
     mugColorChanged ||
     strokeColorChanged ||
     activityTypesChanged ||
+    activitiesChanged ||
     dateRangeChanged
   ) {
-    if (activityTypesChanged || dateRangeChanged) {
-      // If activity types changed, filter activities first
+    if (activityTypesChanged || activitiesChanged || dateRangeChanged) {
+      // If filters changed, update the filtered activities first
       useActivityStore.getState().setFilteredActivities();
     }
-    // Then, generate the image (which will use the latest filteredActivities)
+    // Then, regenerate the image (which will use the latest filteredActivities)
     useActivityStore.getState().generateImage();
   }
 });

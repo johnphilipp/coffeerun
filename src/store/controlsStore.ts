@@ -1,5 +1,6 @@
 import { activityTypeDefinitions } from "@/config/activityTypeDefinitions";
 import { ActivityTypeDefinition } from "@/types/activityTypeDefinition";
+import { Activity } from "@/types/activity";
 import { areColorsSame, getContrastingColor } from "@/utils/colorUtils";
 import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
@@ -11,6 +12,9 @@ interface ControlsState {
   selectedActivityTypes: ActivityTypeDefinition[];
   selectedDateRange: DateRange | undefined;
   selectedYears: number[];
+  selectedActivities: Activity[];
+  toggleActivity: (activity: Activity) => void;
+  setSelectedActivities: (activities: Activity[]) => void;
   setMugColor: (color: string) => void;
   setStrokeColor: (color: string) => void;
   toggleActivityType: (toggledActivityType: ActivityTypeDefinition) => void;
@@ -27,6 +31,7 @@ export const useControlsStore = create<ControlsState>((set, get) => ({
   selectedActivityTypes: activityTypeDefinitions,
   selectedDateRange: undefined,
   selectedYears: [],
+  selectedActivities: [],
 
   setMugColor: (color) => {
     const { strokeColor } = get();
@@ -118,5 +123,28 @@ export const useControlsStore = create<ControlsState>((set, get) => ({
         to: new Date(maxYear, 11, 31),
       },
     });
+  },
+
+  toggleActivity: (activity: Activity) => {
+    const { selectedActivities } = get();
+    const isSelected = selectedActivities.includes(activity);
+
+    if (isSelected) {
+      // Remove if already selected
+      set({
+        selectedActivities: selectedActivities.filter(
+          (selectedActivity) => selectedActivity !== activity
+        ),
+      });
+    } else {
+      // Add if not selected
+      set({
+        selectedActivities: [...selectedActivities, activity],
+      });
+    }
+  },
+
+  setSelectedActivities: (activities: Activity[]) => {
+    set({ selectedActivities: activities });
   },
 }));

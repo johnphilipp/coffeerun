@@ -23,7 +23,7 @@ export default function DatePicker() {
         />
       </PopoverTrigger>
       <PopoverContent>
-        <div className="flex items-center justify-between border-b -mx-4 px-4 mb-4 pb-2 -mt-1">
+        <div className="flex items-center justify-between -mx-4 px-4 mb-4 -mt-1">
           <h4 className="font-medium text-popover-foreground">Date Range</h4>
         </div>
         <DatePickerWithRange />
@@ -50,8 +50,8 @@ function DatePickerWithRange() {
                 key={year}
                 onClick={() => toggleYear(year)}
                 className={cn(
-                  "flex items-center justify-start gap-3",
-                  isSelected && "bg-primary border border-border"
+                  "flex items-center justify-start gap-3 border border-transparent",
+                  isSelected && "bg-primary border-border"
                 )}
               >
                 {year}
@@ -68,7 +68,7 @@ function DatePickerWithRange() {
           <PopoverTrigger asChild>
             <Button
               className={cn(
-                "min-w-60 flex items-center justify-start hover:scale-105 transition-all duration-300"
+                "min-w-60 flex items-center justify-start hover:scale-102 transition-all duration-300"
               )}
             >
               <CalendarIcon />

@@ -24,7 +24,7 @@ export default function ActivityTypePicker() {
         <Dumbbell className="text-primary-foreground" style={{ scale: 1.2 }} />
       </PopoverTrigger>
       <PopoverContent className="min-w-54">
-        <div className="flex items-center justify-between border-b -mx-4 px-4 mb-4 pb-2 -mt-1">
+        <div className="flex items-center justify-between -mx-4 px-4 mb-4 -mt-1">
           <h4 className="font-medium text-popover-foreground">
             Activity Types
           </h4>
@@ -49,8 +49,8 @@ export default function ActivityTypePicker() {
                 size="lg"
                 key={activityType.type}
                 className={cn(
-                  "flex items-center justify-start gap-3",
-                  isSelected && "bg-primary border border-border"
+                  "flex items-center justify-start gap-3 border border-transparent",
+                  isSelected && "bg-primary border-border"
                 )}
                 onClick={() => toggleActivityType(activityType)}
               >
