@@ -1,6 +1,6 @@
 "use client";
 
-import { MinusIcon, PlusIcon, TrashIcon } from "lucide-react";
+import Scene from "@/components/editor/Scene";
 import {
   Drawer,
   DrawerClose,
@@ -8,9 +8,9 @@ import {
   DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-} from "../ui/drawer";
-import Scene from "./Scene";
+} from "@/components/ui/drawer";
 import { useCartStore } from "@/store/cartStore";
+import { MinusIcon, PlusIcon, TrashIcon, X } from "lucide-react";
 
 export default function CartDrawer() {
   const {
@@ -19,7 +19,6 @@ export default function CartDrawer() {
     closeDrawer,
     updateQuantity,
     removeItem,
-    clearCart,
     getTotalItems,
   } = useCartStore();
 
@@ -31,48 +30,53 @@ export default function CartDrawer() {
 
   return (
     <Drawer open={isDrawerOpen} onOpenChange={closeDrawer}>
-      <DrawerContent>
-        <DrawerHeader>
-          <DrawerTitle>
+      <DrawerContent className="bg-popover backdrop-blur-xl mx-auto w-full max-w-2xl">
+        <DrawerHeader className="flex flex-row items-center justify-between gap-2 p-4">
+          <DrawerTitle className="text-white text-xl px-2 whitespace-nowrap">
             Your Cart ({totalItems} item{totalItems !== 1 ? "s" : ""})
           </DrawerTitle>
+          <DrawerClose asChild>
+            <button className="text-white/90 hover:text-white shrink-0">
+              <X />
+            </button>
+          </DrawerClose>
         </DrawerHeader>
 
-        <div className="flex flex-col items-center py-4 max-h-96 overflow-y-auto">
+        <div className="flex flex-col gap-4 px-4 pb-4 max-h-[70vh] overflow-y-auto">
           {items.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-gray-500">Your cart is empty</p>
+              <p className="text-white/80">Your cart is empty</p>
             </div>
           ) : (
-            <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
               {/* Show 3D preview of the mug */}
-              <div className="w-64 h-64 mb-4">
+              <div className="w-full h-64 md:h-48 md:w-48 col-span-1 rounded-xl bg-white/5 ring-1 ring-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)]">
                 <Scene />
               </div>
 
               {/* Cart items list */}
-              <div className="w-full max-w-md space-y-4 px-4">
+              <div className="w-full space-y-3 md:space-y-4 col-span-1 md:col-span-2">
                 {items.map((item) => (
                   <div
                     key={item.id}
-                    className="flex items-center justify-between bg-gray-50 p-4 rounded-lg"
+                    className="flex items-center justify-between p-4 rounded-xl bg-white/10 ring-1 ring-white/10 shadow-[0_8px_30px_rgba(0,0,0,0.12)] text-white"
                   >
-                    <div className="flex-1">
-                      <h3 className="font-medium">{item.name}</h3>
+                    <div className="flex-1 min-w-0 pr-3">
+                      <h3 className="font-medium truncate">{item.name}</h3>
                       {item.price && (
-                        <p className="text-gray-600">
+                        <p className="text-white/70">
                           ${item.price.toFixed(2)} each
                         </p>
                       )}
                     </div>
 
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 shrink-0">
                       {/* Quantity controls */}
                       <button
                         onClick={() =>
                           updateQuantity(item.id, item.quantity - 1)
                         }
-                        className="p-1 rounded-md hover:bg-gray-200 transition-colors"
+                        className="p-1 rounded-md hover:bg-white/15 transition-colors text-white"
                         disabled={item.quantity <= 1}
                       >
                         <MinusIcon size={16} />
@@ -86,7 +90,7 @@ export default function CartDrawer() {
                         onClick={() =>
                           updateQuantity(item.id, item.quantity + 1)
                         }
-                        className="p-1 rounded-md hover:bg-gray-200 transition-colors"
+                        className="p-1 rounded-md hover:bg-white/15 transition-colors text-white"
                       >
                         <PlusIcon size={16} />
                       </button>
@@ -94,7 +98,7 @@ export default function CartDrawer() {
                       {/* Remove item */}
                       <button
                         onClick={() => removeItem(item.id)}
-                        className="p-1 ml-2 text-red-500 hover:bg-red-50 rounded-md transition-colors"
+                        className="p-1 ml-2 text-red-400 hover:bg-red-500/10 rounded-md transition-colors"
                       >
                         <TrashIcon size={16} />
                       </button>
@@ -104,38 +108,27 @@ export default function CartDrawer() {
               </div>
 
               {/* Total price */}
-              {totalPrice > 0 && (
-                <div className="w-full max-w-md px-4 pt-4 border-t">
-                  <div className="flex justify-between items-center font-semibold text-lg">
-                    <span>Total:</span>
-                    <span>${totalPrice.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
-            </>
+              {/* Spacer to avoid content hidden behind footer */}
+              <div className="h-2 md:h-0" />
+            </div>
           )}
         </div>
 
-        <DrawerFooter>
-          {items.length > 0 && (
-            <>
-              <button className="w-full bg-black text-white py-3 rounded-md hover:bg-gray-800 transition-colors font-medium">
-                Proceed to Payment (${totalPrice.toFixed(2)})
+        {totalPrice > 0 && (
+          <DrawerFooter className="sticky bottom-0 bg-white/10 ring-1 ring-white/10">
+            <div className="flex items-center justify-between w-full">
+              <span className="text-sm text-white/80">Subtotal</span>
+              <span className="font-semibold text-lg text-white">
+                ${totalPrice.toFixed(2)}
+              </span>
+            </div>
+            <div className="flex items-center justify-end gap-2">
+              <button className="bg-white text-gray-900 rounded-md px-4 py-2 hover:bg-white/90 font-semibold">
+                Checkout
               </button>
-              <button
-                onClick={clearCart}
-                className="w-full mt-2 text-red-500 hover:text-red-700 py-2 transition-colors"
-              >
-                Clear Cart
-              </button>
-            </>
-          )}
-          <DrawerClose asChild>
-            <button className="w-full mt-2 border py-2 rounded-md hover:bg-gray-50 transition-colors">
-              Close
-            </button>
-          </DrawerClose>
-        </DrawerFooter>
+            </div>
+          </DrawerFooter>
+        )}
       </DrawerContent>
     </Drawer>
   );

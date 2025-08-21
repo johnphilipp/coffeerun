@@ -13,6 +13,7 @@ interface ControlsState {
   selectedDateRange: DateRange | undefined;
   selectedYears: number[];
   selectedActivities: Activity[];
+  isRotationPaused: boolean;
   toggleActivity: (activity: Activity) => void;
   setSelectedActivities: (activities: Activity[]) => void;
   setMugColor: (color: string) => void;
@@ -23,6 +24,9 @@ interface ControlsState {
   ) => void; // TODO: Check if this can be removed?
   setSelectedDateRange: (dateRange: DateRange | undefined) => void; // Needs to be "undefined" as per DayPickerRangeProps
   toggleYear: (year: number) => void;
+  pauseRotation: () => void;
+  resumeRotation: () => void;
+  toggleRotation: () => void;
 }
 
 export const useControlsStore = create<ControlsState>((set, get) => ({
@@ -32,6 +36,7 @@ export const useControlsStore = create<ControlsState>((set, get) => ({
   selectedDateRange: undefined,
   selectedYears: [],
   selectedActivities: [],
+  isRotationPaused: false,
 
   setMugColor: (color) => {
     const { strokeColor } = get();
@@ -146,5 +151,18 @@ export const useControlsStore = create<ControlsState>((set, get) => ({
 
   setSelectedActivities: (activities: Activity[]) => {
     set({ selectedActivities: activities });
+  },
+
+  pauseRotation: () => {
+    set({ isRotationPaused: true });
+  },
+
+  resumeRotation: () => {
+    set({ isRotationPaused: false });
+  },
+
+  toggleRotation: () => {
+    const { isRotationPaused } = get();
+    set({ isRotationPaused: !isRotationPaused });
   },
 }));

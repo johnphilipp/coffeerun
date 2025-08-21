@@ -5,10 +5,13 @@ import { useGLTF, useTexture } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { useRef } from "react";
 import * as THREE from "three";
+import { useControlsStore } from "@/store/controlsStore";
 
 export default function Mug() {
   const meshRef = useRef<THREE.Mesh>(null);
   const { generatedImage } = useActivityStore();
+  const isRotationPaused = useControlsStore((state) => state.isRotationPaused);
+  const rotationSpeedRef = useRef<number>(0.5);
 
   const { nodes, materials } = useGLTF("/assets/model/caneca.glb");
 
@@ -24,8 +27,16 @@ export default function Mug() {
   });
 
   useFrame((state, delta) => {
+    const targetSpeed = isRotationPaused ? 0 : 0.5;
+    rotationSpeedRef.current = THREE.MathUtils.damp(
+      rotationSpeedRef.current,
+      targetSpeed,
+      6,
+      delta
+    );
+
     if (meshRef.current) {
-      meshRef.current.rotation.y -= delta * 0.5;
+      meshRef.current.rotation.y -= delta * rotationSpeedRef.current;
     }
   });
 

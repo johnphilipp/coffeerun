@@ -1,8 +1,7 @@
 "use client";
 
-import { Gift, ShoppingCartIcon } from "lucide-react";
-import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
+import { ShoppingCartIcon } from "lucide-react";
 
 export default function AddToCartButton() {
   const { addItem, openDrawer, getTotalItems, items } = useCartStore();
@@ -39,13 +38,6 @@ export default function AddToCartButton() {
             </span>
           )}
         </button>
-        <Link
-          href="#"
-          className="mt-2 text-primary-foreground hover:text-accent-foreground focus:text-accent-foreground flex items-center gap-1.5 hover:scale-105 transition-all duration-300"
-        >
-          Gift a friend
-          <Gift size={16} />
-        </Link>
       </div>
     </div>
   );

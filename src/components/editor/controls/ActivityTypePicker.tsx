@@ -29,7 +29,7 @@ export default function ActivityTypePicker() {
             Activity Types
           </h4>
           <Checkbox
-            className="mr-4"
+            className="mr-4 w-5 h-5"
             checked={selectedActivityTypes.length === validActivityTypes.length}
             onCheckedChange={() => {
               if (selectedActivityTypes.length === validActivityTypes.length) {

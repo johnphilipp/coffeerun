@@ -46,7 +46,7 @@ export default function ActivityPicker() {
         <div className="flex items-center justify-between -mx-4 px-4 mb-4 -mt-1">
           <h4 className="font-medium text-popover-foreground">Activities</h4>
           <Checkbox
-            className="mr-4"
+            className="mr-4 w-5 h-5"
             checked={selectedActivities.length === validActivities.length}
             onCheckedChange={() => {
               if (selectedActivities.length === validActivities.length) {

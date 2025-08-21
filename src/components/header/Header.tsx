@@ -14,14 +14,15 @@ export default async function Header({ light }: HeaderProps) {
     <header className="mt-4 flex items-center justify-between px-6 z-50">
       <Link
         href="/"
-        className={`text-xl hover:cursor-pointer mx-auto hover:scale-105 transition-all duration-300 font-logo ${
+        className={`text-xl hover:cursor-pointer mx-auto hover:scale-105 transition-all duration-300 font-sans ${
           light
             ? "text-gray-800 hover:text-gray-900"
             : "text-gray-200 hover:text-gray-300"
         }`}
       >
-        trophy<span className="font-bold">mug</span>
+        coffee<span className="font-bold">run</span>
       </Link>
+
       {user && (
         <UserDropdown
           user={{

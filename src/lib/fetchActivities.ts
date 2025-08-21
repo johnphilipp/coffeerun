@@ -15,6 +15,10 @@ export async function fetchActivitiesFromStrava(accessToken: string) {
       }
     );
 
+    if (!res.ok) {
+      throw new Error("Failed to fetch activities from Strava");
+    }
+
     const activityBatch = await res.json();
     if (!Array.isArray(activityBatch) || !activityBatch.length) break;
 

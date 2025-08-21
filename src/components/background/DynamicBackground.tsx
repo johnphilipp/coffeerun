@@ -11,9 +11,9 @@ export default function DynamicBackground({
 
   return (
     <div
-      className="h-screen flex flex-col"
+      className="h-[100dvh] flex flex-col overflow-hidden"
       style={{
-        background: `radial-gradient(circle at 50% 60%, ${mugColor}cc -20%, #0d0d0d 120%)`,
+        background: `radial-gradient(circle at 50% 60%, ${mugColor}cc -20%, #0d0d0d 160%)`,
       }}
     >
       {children}

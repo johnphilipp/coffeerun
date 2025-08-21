@@ -11,8 +11,9 @@ import { Canvas } from "@react-three/fiber";
 import { Loader2 } from "lucide-react";
 import { Suspense } from "react";
 import * as THREE from "three";
+import { cn } from "@/lib/utils";
 
-export default function Scene() {
+export default function Scene({ className }: { className?: string }) {
   return (
     <Canvas
       shadows
@@ -25,6 +26,7 @@ export default function Scene() {
       style={{
         touchAction: "none",
       }}
+      className={cn("-mt-6", className)}
     >
       <Environment files="/assets/hdr/forest_slope_1k.hdr" />
       <PresentationControls

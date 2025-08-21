@@ -1,57 +1,79 @@
 "use client";
 
-import { signIn } from "next-auth/react";
-import { FaStrava, FaGift } from "react-icons/fa";
-import Link from "next/link";
-import { Button } from "../ui/button";
+import Scene from "@/components/editor/Scene";
+import { Button } from "@/components/ui/button";
+import { demoData } from "@/data/demoData";
+import { useActivityStore } from "@/store/activityStore";
 import { ChevronRight } from "lucide-react";
+import { signIn } from "next-auth/react";
+import Link from "next/link";
+import { useEffect } from "react";
+import { FaGift, FaStrava } from "react-icons/fa";
 
 export default function Home() {
+  const setActivities = useActivityStore((state) => state.setActivities);
+
+  useEffect(() => {
+    setActivities(demoData);
+  }, [setActivities]);
+
   return (
-    <div className="h-full flex flex-col">
-      <main className="flex-1 flex flex-col">
-        <section className="flex-1 flex flex-col items-center justify-center px-6">
-          <div className="w-full max-w-[280px] aspect-square relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-orange-100 to-orange-50 rounded-3xl transform rotate-3 transition-transform duration-500 hover:rotate-0">
-              <div className="absolute inset-0 flex items-center justify-center">
-                <div className="w-3/4 h-3/4 bg-white rounded-2xl shadow-lg transform -rotate-3 transition-transform duration-500 hover:rotate-0">
-                  <div className="w-full h-full flex items-center justify-center text-gray-400">
-                    <span className="text-xs text-center px-2">
-                      TODO: Add 3D mug preview
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+    <div className="h-[100dvh] overflow-hidden">
+      <Scene className="-mt-28 h-full w-full" />
 
-        <section className="flex flex-col gap-3 sm:gap-6 p-6 items-center">
+      {/* Blocker so the Mug can't be moved */}
+      <div className="absolute bottom-0 left-0 right-0 z-10 h-full" />
+
+      {/* Gradient */}
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 via-gray-900/60 to-transparent z-10 h-2/3" />
+
+      <section className="flex flex-col gap-3 p-6 items-center absolute bottom-6 left-0 right-0 z-10 pb-[env(safe-area-inset-bottom)]">
+        <h2
+          className="text-2xl sm:text-3xl font-bold text-white text-left sm:text-center"
+          style={{
+            textShadow: "0 4px 20px rgba(0,0,0,1)",
+          }}
+        >
+          Your Miles. Your Mug.
+        </h2>
+
+        <p
+          className="text-md sm:text-lg text-gray-300 mb-2 sm:mb-4 max-w-sm text-left sm:text-center"
+          style={{
+            textShadow: "0 4px 20px rgba(0,0,0,1)",
+          }}
+        >
+          Create and order a personalized coffee mug as a keepsake of your best
+          sports moments.
+        </p>
+
+        <Button
+          onClick={() => signIn("strava", { redirectTo: "/editor" })}
+          className="bg-[#fc4c02] hover:bg-[#fc4c02]/90 text-sm sm:text-base w-full flex items-center gap-3 h-11 max-w-sm font-bold"
+          variant="default"
+        >
+          <FaStrava style={{ transform: "scale(1.5)" }} />
+          Connect with Strava
+        </Button>
+
+        <Link href="/" className="w-full max-w-sm">
           <Button
-            onClick={() => signIn("strava", { redirectTo: "/editor" })}
-            className="bg-[#fc4c02] hover:bg-[#fc4c02] w-full flex items-center gap-3 h-12 sm:text-lg max-w-md"
-            variant="default"
+            onClick={() => signIn("strava", { redirectTo: "/gift" })}
+            className="w-full flex items-center gap-4 h-11 font-bold text-sm sm:text-base"
           >
-            <FaStrava style={{ transform: "scale(1.7)" }} />
-            Connect with Strava
+            <FaGift style={{ transform: "scale(1.5)" }} />
+            Gift a friend
           </Button>
+        </Link>
 
-          <Link href="/" className="w-full max-w-md">
-            <Button className="w-full flex items-center gap-3 h-12 sm:text-lg">
-              <FaGift style={{ transform: "scale(1.5)" }} />
-              Gift a friend
-            </Button>
-          </Link>
-
-          <Link
-            href="/demo"
-            className="text-sm sm:text-lg text-gray-500 hover:text-gray-400 transition-colors duration-200 inline-flex items-center justify-center gap-1 hover:scale-105 transition-all duration-300"
-          >
-            View a demo
-            <ChevronRight className="w-4 h-4" />
-          </Link>
-        </section>
-      </main>
+        <Link
+          href="/demo"
+          className="text-sm sm:text-base text-gray-300 hover:text-gray-400 transition-colors duration-200 flex items-center justify-center gap-1"
+        >
+          View a demo
+          <ChevronRight className="w-4 h-4 mt-0.5" />
+        </Link>
+      </section>
     </div>
   );
 }
