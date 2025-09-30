@@ -8,7 +8,7 @@ import { ChevronRight } from "lucide-react";
 import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { FaGift, FaStrava } from "react-icons/fa";
+import { FaStrava } from "react-icons/fa";
 
 export default function Home() {
   const setActivities = useActivityStore((state) => state.setActivities);
@@ -56,7 +56,7 @@ export default function Home() {
           Connect with Strava
         </Button>
 
-        <Link href="/" className="w-full max-w-sm">
+        {/* <Link href="/" className="w-full max-w-sm">
           <Button
             onClick={() => signIn("strava", { redirectTo: "/gift" })}
             className="w-full flex items-center gap-4 h-11 font-bold text-sm sm:text-base"
@@ -64,7 +64,7 @@ export default function Home() {
             <FaGift style={{ transform: "scale(1.5)" }} />
             Gift a friend
           </Button>
-        </Link>
+        </Link> */}
 
         <Link
           href="/demo"
