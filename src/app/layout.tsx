@@ -1,5 +1,6 @@
 import DynamicBackground from "@/components/background/DynamicBackground";
 import Header from "@/components/header/Header";
+import StoreHydrator from "@/components/StoreHydrator";
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata } from "next";
 import { Manrope, Playfair_Display } from "next/font/google";
@@ -30,6 +31,7 @@ export default function RootLayout({
       <body
         className={`${manrope.variable} ${playfairDisplay.variable} font-sans antialiased`}
       >
+        <StoreHydrator />
         <DynamicBackground>
           <Header />
           <main className="flex-1">{children}</main>

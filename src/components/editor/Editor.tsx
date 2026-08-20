@@ -10,14 +10,18 @@ import { Activity } from "@/types/activity";
 import { useEffect } from "react";
 
 interface EditorProps {
-  activities: Activity[];
+  /**
+   * Seeds the activity store. Omit it to render whatever the store already
+   * holds — that's how /editor shows rides restored from localStorage.
+   */
+  activities?: Activity[];
 }
 
 export default function Editor({ activities }: EditorProps) {
   const setActivities = useActivityStore((state) => state.setActivities);
 
   useEffect(() => {
-    setActivities(activities);
+    if (activities) setActivities(activities);
   }, [activities, setActivities]);
 
   return (

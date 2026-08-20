@@ -2,19 +2,26 @@
 
 import Scene from "@/components/editor/Scene";
 import { Button } from "@/components/ui/button";
-import { demoData } from "@/data/demoData";
 import { useActivityStore } from "@/store/activityStore";
-import { ChevronRight } from "lucide-react";
-import { signIn } from "next-auth/react";
+import { ChevronRight, UploadIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect } from "react";
-import { FaStrava } from "react-icons/fa";
 
 export default function Home() {
   const setActivities = useActivityStore((state) => state.setActivities);
 
+  // Loaded lazily — the fixture is ~950KB and the mug it decorates isn't
+  // needed for first paint.
   useEffect(() => {
-    setActivities(demoData);
+    let cancelled = false;
+
+    import("@/data/demoData").then(({ demoData }) => {
+      if (!cancelled) setActivities(demoData);
+    });
+
+    return () => {
+      cancelled = true;
+    };
   }, [setActivities]);
 
   return (
@@ -47,24 +54,15 @@ export default function Home() {
           sports moments.
         </p>
 
-        <Button
-          onClick={() => signIn("strava", { redirectTo: "/editor" })}
-          className="bg-[#fc4c02] hover:bg-[#fc4c02]/90 text-sm sm:text-base w-full flex items-center gap-3 h-11 max-w-sm font-bold"
-          variant="default"
-        >
-          <FaStrava style={{ transform: "scale(1.5)" }} />
-          Connect with Strava
-        </Button>
-
-        {/* <Link href="/" className="w-full max-w-sm">
+        <Link href="/import" className="w-full max-w-sm">
           <Button
-            onClick={() => signIn("strava", { redirectTo: "/gift" })}
-            className="w-full flex items-center gap-4 h-11 font-bold text-sm sm:text-base"
+            className="text-sm sm:text-base w-full flex items-center gap-3 h-11 font-bold"
+            variant="default"
           >
-            <FaGift style={{ transform: "scale(1.5)" }} />
-            Gift a friend
+            <UploadIcon style={{ transform: "scale(1.3)" }} />
+            Add your rides
           </Button>
-        </Link> */}
+        </Link>
 
         <Link
           href="/demo"

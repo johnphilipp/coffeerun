@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local scraper work — contains session cookies and cached third-party responses
+src/lib/scraper/

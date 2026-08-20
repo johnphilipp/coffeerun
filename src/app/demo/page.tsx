@@ -1,6 +1,5 @@
-import Editor from "@/components/editor/Editor";
-import { demoData } from "@/data/demoData";
+import DemoLoader from "@/components/demo/DemoLoader";
 
-export default async function DemoPage() {
-  return <Editor activities={demoData} />;
+export default function DemoPage() {
+  return <DemoLoader />;
 }
