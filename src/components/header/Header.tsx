@@ -1,15 +1,10 @@
-import { auth } from "@/auth";
 import Link from "next/link";
-import UserDropdown from "@/components/header/UserDropdown";
 
 interface HeaderProps {
   light?: boolean;
 }
 
-export default async function Header({ light }: HeaderProps) {
-  const session = await auth();
-  const user = session?.user;
-
+export default function Header({ light }: HeaderProps) {
   return (
     <header className="mt-4 flex items-center justify-between px-6 z-50">
       <Link
@@ -22,16 +17,6 @@ export default async function Header({ light }: HeaderProps) {
       >
         coffee<span className="font-bold">run</span>
       </Link>
-
-      {user && (
-        <UserDropdown
-          user={{
-            name: user.name || "",
-            email: user.email || "",
-            image: user.image || undefined,
-          }}
-        />
-      )}
     </header>
   );
 }
