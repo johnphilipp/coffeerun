@@ -10,14 +10,17 @@ import { Circle } from "lucide-react";
 export default function StrokeColorPicker() {
   const { strokeColor, setStrokeColor } = useControlsStore();
 
+  // No #ffffff: the mug is white now, so a white stroke would be invisible and
+  // produce a blank print. #000000 (the default) leads so it shows the active
+  // ring at first load.
   const colors = [
-    "#ffffff",
     "#000000",
     "#ff0000",
     "#00ff00",
     "#f4a8ff",
     "#0000ff",
     "#ffff00",
+    "#e4c192",
   ];
 
   return (

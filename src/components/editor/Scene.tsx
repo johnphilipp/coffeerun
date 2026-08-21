@@ -9,11 +9,26 @@ import {
 } from "@react-three/drei";
 import { Canvas } from "@react-three/fiber";
 import { Loader2 } from "lucide-react";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import * as THREE from "three";
 import { cn } from "@/lib/utils";
 
 export default function Scene({ className }: { className?: string }) {
+  // react-three-fiber measures its container to size the WebGL canvas, but can
+  // mount before the container has its final height — leaving the canvas at its
+  // 300x150 default and the mug invisible until something triggers a resize.
+  // Nudging a resize after mount forces a remeasure. (Pre-existing race, not
+  // specific to the print export.)
+  useEffect(() => {
+    const nudge = () => window.dispatchEvent(new Event("resize"));
+    const raf = requestAnimationFrame(nudge);
+    const timer = setTimeout(nudge, 100);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(timer);
+    };
+  }, []);
+
   return (
     <Canvas
       shadows
