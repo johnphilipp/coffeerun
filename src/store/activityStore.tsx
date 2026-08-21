@@ -163,9 +163,9 @@ export const useActivityStore = create<ActivityState>((set, get) => ({
   setGeneratedImage: (image) => set({ generatedImage: image }),
 }));
 
-// Subscribe to controlsStore to regenerate image on mugColor, strokeColor, or selectedActivityTypes change
+// Subscribe to controlsStore to regenerate image on strokeColor, filter, or
+// selection changes.
 useControlsStore.subscribe((state, prevState) => {
-  const mugColorChanged = state.mugColor !== prevState.mugColor;
   const strokeColorChanged = state.strokeColor !== prevState.strokeColor;
   const activityTypesChanged = !isEqual(
     state.selectedActivityTypes,
@@ -181,7 +181,6 @@ useControlsStore.subscribe((state, prevState) => {
   );
 
   if (
-    mugColorChanged ||
     strokeColorChanged ||
     activityTypesChanged ||
     activitiesChanged ||

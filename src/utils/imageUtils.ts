@@ -1,103 +1,180 @@
 import { useActivityStore } from "@/store/activityStore";
 import { useControlsStore } from "@/store/controlsStore";
+import { DEFAULT_PRINT_SPEC, PrintSpec } from "@/config/printSpec";
+import { Activity } from "@/types/activity";
 import polyline from "@mapbox/polyline";
 
+// The mug is always white now (Gelato prints on a white substrate; see the
+// print-export work). Kept as a named constant so the texture and the print
+// export can't drift on it.
+const MUG_BACKGROUND = "#ffffff";
+
+// The printable wrap is 213mm wide (Gelato 15oz). Both the 3D texture and the
+// print file map their design region onto that same physical width, so
+// expressing stroke/margin in mm and converting per-target keeps the preview
+// and the print physically consistent.
+const PRINTABLE_WIDTH_MM = DEFAULT_PRINT_SPEC.widthMm;
+
+// The 3D texture's design region, hand-tuned to the caneca.glb wrap. This is
+// where createImage historically drew, inside a 2048x2048 texture.
+const TEXTURE = {
+  canvas: 2048,
+  region: { x: 480, y: 1450, width: 1300, height: 500 },
+};
+
+interface RenderSpec {
+  canvasWidth: number;
+  canvasHeight: number;
+  region: { x: number; y: number; width: number; height: number };
+  background: string;
+  stroke: string;
+  /** Canvas pixels per millimetre of printable width — sizes the strokes. */
+  pxPerMm: number;
+  activities: Activity[];
+}
+
 /**
- * Create an image from the activities and controls
- * @returns The image as a base64 string
+ * Stroke and cell margin in millimetres, by activity count.
+ *
+ * Was absolute pixels tuned for the 2048 texture; in mm it stays physically
+ * consistent across the preview and the print. The 1.2mm floor exists because
+ * Gelato warns that fine tints fade on ceramic — dense mugs used to drop to
+ * ~0.5mm lines that wouldn't reproduce.
  */
-export const createImage = async (): Promise<string> => {
-  const { filteredActivities } = useActivityStore.getState();
-  const { mugColor, strokeColor } = useControlsStore.getState();
+const MIN_STROKE_MM = 1.2;
 
-  // Create canvas
+function getDesignMetricsMm(n: number): {
+  strokeMm: number;
+  marginMm: number;
+} {
+  const raw =
+    n <= 25
+      ? { strokeMm: 2.0, marginMm: 2.0 }
+      : n <= 50
+      ? { strokeMm: 1.65, marginMm: 1.65 }
+      : n <= 100
+      ? { strokeMm: 1.3, marginMm: 1.3 }
+      : n <= 200
+      ? { strokeMm: 1.0, marginMm: 1.0 }
+      : n <= 400
+      ? { strokeMm: 0.8, marginMm: 0.8 }
+      : n <= 600
+      ? { strokeMm: 0.66, marginMm: 0.66 }
+      : { strokeMm: 0.49, marginMm: 0.49 };
+
+  return { strokeMm: Math.max(raw.strokeMm, MIN_STROKE_MM), marginMm: raw.marginMm };
+}
+
+// Grid arrangement is computed against one canonical aspect (the print area)
+// so a given route lands in the same cell in the preview and the print. Each
+// target then draws that arrangement into its own region.
+function designGrid(n: number) {
+  return calculateGridDimensions(
+    n,
+    DEFAULT_PRINT_SPEC.widthMm,
+    DEFAULT_PRINT_SPEC.heightMm
+  );
+}
+
+/** Draws the routes onto a fresh canvas per the spec and returns it. */
+function renderDesign(spec: RenderSpec): HTMLCanvasElement {
   const canvas = document.createElement("canvas");
-  canvas.width = 2048;
-  canvas.height = 2048;
+  canvas.width = spec.canvasWidth;
+  canvas.height = spec.canvasHeight;
   const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Failed to get canvas context");
 
-  if (!ctx) {
-    throw new Error("Failed to get canvas context");
-  }
-
-  ctx.fillStyle = mugColor;
+  ctx.fillStyle = spec.background;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  // Define region for the image
-  const regionX = 480;
-  const regionY = 1450;
-  const regionWidth = 1300;
-  const regionHeight = 500;
+  const n = spec.activities.length;
+  const { strokeMm, marginMm } = getDesignMetricsMm(n);
+  const strokeWidth = strokeMm * spec.pxPerMm;
+  const cellMargin = marginMm * spec.pxPerMm;
 
-  const { cellMargin, strokeWidth } = getProperties(filteredActivities.length);
   ctx.lineWidth = strokeWidth;
-  ctx.strokeStyle = strokeColor;
+  ctx.strokeStyle = spec.stroke;
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
-  // Calculate grid dimensions
-  const { rows, cols } = calculateGridDimensions(
-    filteredActivities.length,
-    regionWidth,
-    regionHeight
-  );
-  const boxHeight = regionHeight / rows;
+  const { rows, cols } = designGrid(n);
+  const boxHeight = spec.region.height / rows;
 
-  // Draw the activities
-  filteredActivities.forEach((activity, index) => {
+  spec.activities.forEach((activity, index) => {
     const coords = getQuadrantCoordinates(
       activity.map.summary_polyline,
       index,
       cellMargin,
       cols,
-      regionWidth,
+      spec.region.width,
       boxHeight
     );
     if (!coords || coords.length < 2) return;
 
     ctx.beginPath();
-    ctx.moveTo(coords[0][0] + regionX, coords[0][1] + regionY);
+    ctx.moveTo(coords[0][0] + spec.region.x, coords[0][1] + spec.region.y);
     for (let i = 1; i < coords.length; i++) {
       const [x, y] = coords[i];
-      ctx.lineTo(x + regionX, y + regionY);
+      ctx.lineTo(x + spec.region.x, y + spec.region.y);
     }
     ctx.stroke();
   });
 
-  // Convert canvas to image
-  const image = canvas.toDataURL("image/png");
-
-  // Return the image
-  return image;
-};
-
-/**
- * Get the properties for the image
- * @param n - The number of activities
- * @returns The properties for the image
- */
-function getProperties(n: number) {
-  return (function () {
-    if (n <= 25) {
-      return { cellMargin: 12, strokeWidth: 12 };
-    } else if (n <= 50) {
-      return { cellMargin: 10, strokeWidth: 10 };
-    } else if (n <= 100) {
-      return { cellMargin: 8, strokeWidth: 8 };
-    } else if (n <= 200) {
-      return { cellMargin: 6, strokeWidth: 6 };
-    } else if (n <= 400) {
-      return { cellMargin: 5, strokeWidth: 5 };
-    } else if (n <= 600) {
-      return { cellMargin: 4, strokeWidth: 4 };
-    } else {
-      return { cellMargin: 3, strokeWidth: 3 };
-    }
-  })();
+  return canvas;
 }
 
 /**
- * Calculate the grid dimensions for the image
+ * The image mapped onto the 3D mug. Same as the old createImage output, but the
+ * background is now fixed white rather than a mug-color picker.
+ * @returns The image as a base64 data URL.
+ */
+export const createImage = async (): Promise<string> => {
+  const { filteredActivities } = useActivityStore.getState();
+  const { strokeColor } = useControlsStore.getState();
+
+  const canvas = renderDesign({
+    canvasWidth: TEXTURE.canvas,
+    canvasHeight: TEXTURE.canvas,
+    region: TEXTURE.region,
+    background: MUG_BACKGROUND,
+    stroke: strokeColor,
+    pxPerMm: TEXTURE.region.width / PRINTABLE_WIDTH_MM,
+    activities: filteredActivities,
+  });
+
+  return canvas.toDataURL("image/png");
+};
+
+/**
+ * The flat print file for a physical mug — full printable area, white
+ * background, routes inset by the spec's safe margin.
+ */
+export function createPrintCanvas(
+  spec: PrintSpec = DEFAULT_PRINT_SPEC
+): HTMLCanvasElement {
+  const { filteredActivities } = useActivityStore.getState();
+  const { strokeColor } = useControlsStore.getState();
+
+  const marginPx = (spec.safeMarginMm / 25.4) * spec.dpi;
+
+  return renderDesign({
+    canvasWidth: spec.widthPx,
+    canvasHeight: spec.heightPx,
+    region: {
+      x: marginPx,
+      y: marginPx,
+      width: spec.widthPx - 2 * marginPx,
+      height: spec.heightPx - 2 * marginPx,
+    },
+    background: MUG_BACKGROUND,
+    stroke: strokeColor,
+    pxPerMm: spec.widthPx / spec.widthMm,
+    activities: filteredActivities,
+  });
+}
+
+/**
+ * Get the grid dimensions for the image
  * @param numActivities - The number of activities
  * @param width - The width of the image
  * @param height - The height of the image

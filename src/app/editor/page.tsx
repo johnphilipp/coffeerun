@@ -1,6 +1,7 @@
 "use client";
 
 import Editor from "@/components/editor/Editor";
+import PrintExportButton from "@/components/editor/PrintExportButton";
 import LibraryErrorState from "@/components/LibraryErrorState";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
@@ -48,5 +49,10 @@ export default function EditorPage() {
     );
   }
 
-  return <Editor />;
+  return (
+    <>
+      <PrintExportButton />
+      <Editor />
+    </>
+  );
 }

@@ -1,14 +1,14 @@
 import { activityTypeDefinitions } from "@/config/activityTypeDefinitions";
 import { ActivityTypeDefinition } from "@/types/activityTypeDefinition";
 import { Activity } from "@/types/activity";
-import { areColorsSame, getContrastingColor } from "@/utils/colorUtils";
 import { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface ControlsState {
-  mugColor: string;
+  // The mug is white now, so routes just need a color. Default is dark so it's
+  // visible on white (was #ffffff back when the mug was black).
   strokeColor: string;
   selectedActivityTypes: ActivityTypeDefinition[];
   selectedDateRange: DateRange | undefined;
@@ -17,7 +17,6 @@ interface ControlsState {
   isRotationPaused: boolean;
   toggleActivity: (activity: Activity) => void;
   setSelectedActivities: (activities: Activity[]) => void;
-  setMugColor: (color: string) => void;
   setStrokeColor: (color: string) => void;
   toggleActivityType: (toggledActivityType: ActivityTypeDefinition) => void;
   setSelectedActivityTypes: (
@@ -36,36 +35,15 @@ const CONTROLS_STORAGE_KEY = "coffeerun-controls";
 export const useControlsStore = create<ControlsState>()(
   persist(
     (set, get) => ({
-      mugColor: "#000000",
-      strokeColor: "#ffffff",
+      strokeColor: "#111111",
       selectedActivityTypes: activityTypeDefinitions,
       selectedDateRange: undefined,
       selectedYears: [],
       selectedActivities: [],
       isRotationPaused: false,
 
-      setMugColor: (color) => {
-        const { strokeColor } = get();
-        if (areColorsSame(color, strokeColor)) {
-          set({
-            mugColor: color,
-            strokeColor: getContrastingColor(color),
-          });
-        } else {
-          set({ mugColor: color });
-        }
-      },
-
       setStrokeColor: (color) => {
-        const { mugColor } = get();
-        if (areColorsSame(color, mugColor)) {
-          set({
-            strokeColor: color,
-            mugColor: getContrastingColor(color),
-          });
-        } else {
-          set({ strokeColor: color });
-        }
+        set({ strokeColor: color });
       },
 
       toggleActivityType: (toggledActivityType) => {
@@ -175,7 +153,7 @@ export const useControlsStore = create<ControlsState>()(
     {
       name: CONTROLS_STORAGE_KEY,
       skipHydration: true,
-      version: 1,
+      version: 2,
       // Colors are trivially reproducible, unlike someone's rides, so a
       // damaged value here is self-healed rather than surfaced: drop the key
       // so it stops failing on every load and let the defaults stand. Without
@@ -189,14 +167,26 @@ export const useControlsStore = create<ControlsState>()(
           // Storage is unavailable; nothing to clean up.
         }
       },
-      // See libraryStore: present so a future version bump can't take the
-      // silent-wipe branch.
-      migrate: (persisted) => persisted as ControlsState,
-      // Colors only. Selections and the date range are re-derived by
+      // v1 stored a mugColor alongside strokeColor. Keep only strokeColor so
+      // the removed field doesn't ride along as dead state — and remap the old
+      // white default, which is invisible on the now-white mug, to the new dark
+      // default. A deliberately-chosen non-white stroke is preserved.
+      migrate: (persisted) => {
+        const stroke = (persisted as { strokeColor?: unknown })?.strokeColor;
+        const isOldWhiteDefault =
+          typeof stroke === "string" &&
+          ["#ffffff", "#fff"].includes(stroke.toLowerCase());
+        return {
+          strokeColor:
+            typeof stroke === "string" && !isOldWhiteDefault
+              ? stroke
+              : "#111111",
+        } as ControlsState;
+      },
+      // strokeColor only. Selections and the date range are re-derived by
       // activityStore.setActivities() on load, which also means no Date objects
       // cross localStorage and plain JSON stays lossless.
       partialize: (state) => ({
-        mugColor: state.mugColor,
         strokeColor: state.strokeColor,
       }),
     }
