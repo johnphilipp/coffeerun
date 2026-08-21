@@ -1,10 +1,11 @@
 "use client";
 
 import Editor from "@/components/editor/Editor";
+import LibraryErrorState from "@/components/LibraryErrorState";
 import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
 import { useLibrarySeed } from "@/hooks/useLibrarySeed";
-import { RotateCcwIcon, UploadIcon } from "lucide-react";
+import { UploadIcon } from "lucide-react";
 import Link from "next/link";
 
 export default function EditorPage() {
@@ -21,27 +22,7 @@ export default function EditorPage() {
   // Storage worked but the stored value didn't parse. Without an explicit way
   // out, the only recovery is clearing site data by hand.
   if (status === "failed") {
-    return (
-      <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-6 text-center">
-        <h2 className="text-2xl font-bold text-gray-100">
-          Couldn&apos;t read your saved rides
-        </h2>
-        <p className="max-w-sm text-gray-300">
-          The data stored in this browser is damaged. Resetting clears it and
-          starts fresh — your GPX files aren&apos;t affected, so you can import
-          them again.
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <Button onClick={reset} className="font-bold">
-            <RotateCcwIcon />
-            Reset stored rides
-          </Button>
-          <Link href="/demo">
-            <Button variant="outline">View a demo</Button>
-          </Link>
-        </div>
-      </div>
-    );
+    return <LibraryErrorState onReset={reset} />;
   }
 
   if (count === 0) {

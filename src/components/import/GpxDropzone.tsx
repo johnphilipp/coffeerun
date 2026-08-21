@@ -15,6 +15,7 @@ interface GpxDropzoneProps {
 export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [confirmingClear, setConfirmingClear] = useState(false);
   const addActivities = useLibraryStore((state) => state.addActivities);
   const clear = useLibraryStore((state) => state.clear);
@@ -95,7 +96,31 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
   };
 
   return (
-    <div className="space-y-3">
+    // Without these handlers the browser's default drop behavior wins: the tab
+    // navigates to the file:// URL, unmounting the editor and losing the mug in
+    // progress. A component called "Dropzone" invites the gesture, so it has to
+    // handle it.
+    <div
+      className={`space-y-3 rounded-md transition-colors ${
+        isDragging ? "outline outline-2 outline-offset-4 outline-white/40" : ""
+      }`}
+      onDragEnter={(event) => {
+        event.preventDefault();
+        setIsDragging(true);
+      }}
+      onDragOver={(event) => event.preventDefault()}
+      onDragLeave={(event) => {
+        // Ignore bubbling from children, or the highlight flickers.
+        if (!event.currentTarget.contains(event.relatedTarget as Node)) {
+          setIsDragging(false);
+        }
+      }}
+      onDrop={(event) => {
+        event.preventDefault();
+        setIsDragging(false);
+        handleFiles(event.dataTransfer.files);
+      }}
+    >
       <input
         ref={inputRef}
         type="file"
@@ -113,12 +138,16 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
         onClick={() => inputRef.current?.click()}
       >
         <UploadIcon />
-        {isParsing ? "Reading files…" : "Choose .gpx files"}
+        {isParsing
+          ? "Reading files…"
+          : isDragging
+          ? "Drop to import"
+          : "Choose .gpx files"}
       </Button>
 
       <p className="text-xs text-muted-foreground">
-        Nothing is uploaded — files are read in your browser and stay on this
-        device.
+        Or drag them here. Nothing is uploaded — files are read in your browser
+        and stay on this device.
       </p>
 
       {count > 0 && (

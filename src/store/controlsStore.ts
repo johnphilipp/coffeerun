@@ -173,6 +173,19 @@ export const useControlsStore = create<ControlsState>()(
       name: "coffeerun-controls",
       skipHydration: true,
       version: 1,
+      // Colors are trivially reproducible, unlike someone's rides, so a
+      // damaged value here is self-healed rather than surfaced: drop the key
+      // so it stops failing on every load and let the defaults stand. Without
+      // this hook the error was swallowed entirely and the bad value survived
+      // forever, since the library's reset only clears its own key.
+      onRehydrateStorage: () => (_state, error) => {
+        if (!error) return;
+        try {
+          localStorage.removeItem("coffeerun-controls");
+        } catch {
+          // Storage is unavailable; nothing to clean up.
+        }
+      },
       // See libraryStore: present so a future version bump can't take the
       // silent-wipe branch.
       migrate: (persisted) => persisted as ControlsState,

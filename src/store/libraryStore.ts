@@ -31,7 +31,16 @@ export const useLibraryStore = create<LibraryState>()(
       addActivities: (activities) => {
         const existing = get().importedActivities;
         const seen = new Set(existing.map((activity) => activity.id));
-        const fresh = activities.filter((activity) => !seen.has(activity.id));
+        const fresh: Activity[] = [];
+        for (const activity of activities) {
+          // `seen` grows as we go, so duplicates *within* one selection are
+          // caught too — picking a file and a renamed copy of it in the same
+          // import used to write two entries sharing an id, which collides
+          // ActivityPicker's React keys and draws the route twice.
+          if (seen.has(activity.id)) continue;
+          seen.add(activity.id);
+          fresh.push(activity);
+        }
         if (fresh.length > 0) {
           set({
             importedActivities: [...existing, ...fresh].sort(

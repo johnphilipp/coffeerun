@@ -1,6 +1,5 @@
 "use client";
 
-import { persistApiOf } from "@/components/StoreHydrator";
 import { useActivityStore } from "@/store/activityStore";
 import { useHydrationStore } from "@/store/hydrationStore";
 import { useLibraryStore } from "@/store/libraryStore";
@@ -29,10 +28,14 @@ export function useLibrarySeed() {
     setActivities(importedActivities);
   }, [status, importedActivities, setActivities]);
 
-  // Recovery for `failed`: drop the unreadable value so the next load starts
-  // clean. Only ever called from an explicit user action.
+  // Recovery for `failed`: replace the unreadable value so the next load
+  // starts clean. Only ever called from an explicit user action.
+  //
+  // clear() alone is enough — it goes through persist's wrapped set, which
+  // synchronously writes an empty library over the damaged one. Calling
+  // clearStorage() first would be pointless, since the very next line puts the
+  // key straight back.
   const reset = useCallback(() => {
-    persistApiOf(useLibraryStore)?.clearStorage();
     clear();
     useHydrationStore.getState().setStatus("ready");
   }, [clear]);

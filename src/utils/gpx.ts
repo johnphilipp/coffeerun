@@ -1,12 +1,26 @@
+import { activityTypeDefinitions } from "@/config/activityTypeDefinitions";
 import { Activity } from "@/types/activity";
 import { makeActivity } from "@/utils/activityCore";
 import polyline from "@mapbox/polyline";
 
+/**
+ * The sports the rest of the app can actually render — icons, labels and the
+ * type filter all come from activityTypeDefinitions. Deriving the set here
+ * rather than restating it means the alias tables below can't emit a type that
+ * has no definition (an earlier version emitted "Swim", which has none, and
+ * produced an unlabelled iconless row in the filter).
+ */
+const CANONICAL_SPORTS = new Set(activityTypeDefinitions.map((d) => d.type));
+
+const FALLBACK_SPORT = "Workout";
+
 // GPX has no standard sport vocabulary. Strava exports put either a numeric
 // code or a loose string in <trk><type>; Garmin writes trail_running, Wahoo
-// writes "Trail Run". Keys here are normalized (lowercased, non-letters
-// stripped) so all those spellings land on one entry.
-const SPORT_BY_GPX_TYPE: Record<string, string> = {
+// writes "Trail Run". Keys are normalized (lowercased, non-letters stripped)
+// so all those spellings land on one entry. A Map rather than an object
+// literal because normalized input like "constructor" would otherwise resolve
+// against Object.prototype and return a function instead of falling through.
+const SPORT_BY_GPX_TYPE = new Map<string, string>(Object.entries({
   ride: "Ride",
   cycling: "Ride",
   biking: "Ride",
@@ -30,18 +44,51 @@ const SPORT_BY_GPX_TYPE: Record<string, string> = {
   snowboard: "Snowboard",
   surfing: "Surfing",
   rockclimbing: "RockClimbing",
-};
+  rowing: "Rowing",
+  golf: "Golf",
+  yoga: "Yoga",
+  weighttraining: "WeightTraining",
+}));
 
 // Strava's numeric activity codes, which survive in some older exports.
-const SPORT_BY_GPX_CODE: Record<string, string> = {
-  "1": "Ride",
-  "4": "Hike",
-  "9": "Run",
-  "16": "Swim",
-};
+const SPORT_BY_GPX_CODE = new Map<string, string>(
+  Object.entries({
+    "1": "Ride",
+    "4": "Hike",
+    "9": "Run",
+    "16": "Swim",
+  })
+);
 
 function normalizeSportKey(raw: string): string {
   return raw.toLowerCase().replace(/[^a-z]/g, "");
+}
+
+/**
+ * Resolves a raw <trk><type> to a sport the app can render. An alias pointing
+ * at a type with no definition (Swim, today) degrades to Workout rather than
+ * producing an orphan — and starts working on its own if a definition is added.
+ */
+function resolveSport(rawType: string): string {
+  const candidate =
+    SPORT_BY_GPX_CODE.get(rawType.trim()) ??
+    SPORT_BY_GPX_TYPE.get(normalizeSportKey(rawType));
+  return candidate && CANONICAL_SPORTS.has(candidate)
+    ? candidate
+    : FALLBACK_SPORT;
+}
+
+/**
+ * Rejects coordinates that aren't real positions. A lost GPS fix routinely
+ * emits (0, 0), and one such point adds two ~5000km legs to the distance and
+ * stretches the polyline's bounding box across the planet, which the mug
+ * renderer then normalizes into an invisible dot.
+ */
+function isPlausibleCoord(lat: number, lon: number): boolean {
+  if (!Number.isFinite(lat) || !Number.isFinite(lon)) return false;
+  if (lat < -90 || lat > 90 || lon < -180 || lon > 180) return false;
+  if (lat === 0 && lon === 0) return false;
+  return true;
 }
 
 function haversineMeters(a: [number, number], b: [number, number]): number {
@@ -125,9 +172,13 @@ export function parseGpx(
     throw new Error(`${fileName} is not valid XML`);
   }
 
-  const tracks = tagged(doc, "trk");
+  // Recorded activities use <trk><trkseg><trkpt>; planned routes — which is
+  // what Komoot and most route planners export, and the import dialog names
+  // Komoot explicitly — use <rte><rtept>. Same lat/lon/ele/time children, so
+  // both are handled as one shape.
+  const tracks = [...tagged(doc, "trk"), ...tagged(doc, "rte")];
   if (tracks.length === 0) {
-    throw new Error(`${fileName} contains no <trk> element`);
+    throw new Error(`${fileName} contains no <trk> or <rte> element`);
   }
 
   // Many route exports have no per-point times but do carry <metadata><time>.
@@ -141,7 +192,7 @@ export function parseGpx(
   const activities: Activity[] = [];
 
   for (const trk of tracks) {
-    const points = tagged(trk, "trkpt");
+    const points = [...tagged(trk, "trkpt"), ...tagged(trk, "rtept")];
     const coords: [number, number][] = [];
     let firstMs = Number.POSITIVE_INFINITY;
     let lastMs = Number.NEGATIVE_INFINITY;
@@ -151,7 +202,7 @@ export function parseGpx(
     for (const point of points) {
       const lat = Number.parseFloat(point.getAttribute("lat") ?? "");
       const lon = Number.parseFloat(point.getAttribute("lon") ?? "");
-      if (!Number.isFinite(lat) || !Number.isFinite(lon)) continue;
+      if (!isPlausibleCoord(lat, lon)) continue;
       coords.push([lat, lon]);
 
       const time = textOf(point, "time");
@@ -204,13 +255,9 @@ export function parseGpx(
 
     const summaryPolyline = polyline.encode(coords);
     const name = textOf(trk, "name") ?? fallbackName;
-    const rawType = textOf(trk, "type") ?? "";
     // Unknown or absent types become Workout rather than Ride — mislabelling
     // 200 runs as rides makes the type filter actively wrong.
-    const sport =
-      SPORT_BY_GPX_CODE[rawType.trim()] ??
-      SPORT_BY_GPX_TYPE[normalizeSportKey(rawType)] ??
-      "Workout";
+    const sport = resolveSport(textOf(trk, "type") ?? "");
 
     activities.push(
       makeActivity({

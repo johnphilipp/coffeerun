@@ -2,6 +2,7 @@
 
 import Editor from "@/components/editor/Editor";
 import GpxDropzone from "@/components/import/GpxDropzone";
+import LibraryErrorState from "@/components/LibraryErrorState";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -10,16 +11,32 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import Spinner from "@/components/ui/spinner";
 import { useLibrarySeed } from "@/hooks/useLibrarySeed";
 import { UploadIcon } from "lucide-react";
 import { useState } from "react";
 
 export default function ImportPage() {
-  const { count } = useLibrarySeed();
+  const { status, count, reset } = useLibrarySeed();
   // Adding files is the whole point of this route, so the picker is open on
   // arrival whether or not rides already exist. Dismissing it reveals the mug;
   // /editor is the route for going straight there.
   const [isOpen, setIsOpen] = useState(true);
+
+  if (status === "pending") {
+    return (
+      <div className="flex h-full w-full items-center justify-center">
+        <Spinner />
+      </div>
+    );
+  }
+
+  // Must come before the picker: importing here would write over the damaged
+  // value and destroy whatever was still recoverable. This route is where the
+  // homepage's primary CTA lands, so it needs the recovery path too.
+  if (status === "failed") {
+    return <LibraryErrorState onReset={reset} />;
+  }
 
   return (
     <div className="h-full w-full">
