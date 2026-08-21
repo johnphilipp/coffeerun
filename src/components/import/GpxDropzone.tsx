@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useLibraryStore } from "@/store/libraryStore";
 import { Activity } from "@/types/activity";
 import { parseGpx } from "@/utils/gpx";
-import { UploadIcon } from "lucide-react";
+import { Trash2Icon, UploadIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
@@ -15,7 +15,10 @@ interface GpxDropzoneProps {
 export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isParsing, setIsParsing] = useState(false);
+  const [confirmingClear, setConfirmingClear] = useState(false);
   const addActivities = useLibraryStore((state) => state.addActivities);
+  const clear = useLibraryStore((state) => state.clear);
+  const count = useLibraryStore((state) => state.importedActivities.length);
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -24,40 +27,71 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
     const parsed: Activity[] = [];
     const failures: string[] = [];
 
-    for (const file of Array.from(files)) {
-      try {
-        parsed.push(...parseGpx(await file.text(), file.name));
-      } catch (error) {
-        failures.push(error instanceof Error ? error.message : file.name);
+    try {
+      for (const file of Array.from(files)) {
+        try {
+          parsed.push(
+            ...parseGpx(await file.text(), file.name, file.lastModified)
+          );
+        } catch (error) {
+          failures.push(error instanceof Error ? error.message : file.name);
+        }
       }
-    }
 
-    for (const failure of failures) toast.error(failure);
+      for (const failure of failures) toast.error(failure);
+      if (parsed.length === 0) return;
 
-    if (parsed.length > 0) {
-      // useLibrarySeed picks the new rides up from the library and pushes the
-      // whole set into the activity store, so previously imported rides stay
-      // on the mug.
-      const added = addActivities(parsed);
+      let added: number;
+      try {
+        // useLibrarySeed picks the new rides up from the library and pushes the
+        // whole set into the activity store, so previously imported rides stay
+        // on the mug.
+        added = addActivities(parsed);
+      } catch {
+        // zustand's persist writes to localStorage synchronously inside `set`,
+        // so a QuotaExceededError surfaces here — after the rides are already
+        // in memory. Keeping them means this mug is still finishable; saying so
+        // means the user isn't surprised when they vanish on reload.
+        toast.error(
+          "Storage is full — these rides are loaded but won't be saved. Remove some rides, or import fewer files."
+        );
+        onImported?.();
+        return;
+      }
+
       const skipped = parsed.length - added;
-
       if (added === 0) {
         toast.info(
           `Already in your library — nothing new in ${
             files.length === 1 ? "that file" : "those files"
           }`
         );
-      } else {
-        toast.success(
-          `Imported ${added} ${added === 1 ? "activity" : "activities"}` +
-            (skipped > 0 ? ` — ${skipped} already in your library` : "")
-        );
+        // Deliberately no onImported() here: dismissing the picker on a pure
+        // no-op drops the user on an unchanged mug with no way back.
+        return;
       }
-      onImported?.();
-    }
 
-    setIsParsing(false);
-    if (inputRef.current) inputRef.current.value = "";
+      toast.success(
+        `Imported ${added} ${added === 1 ? "activity" : "activities"}` +
+          (skipped > 0 ? ` — ${skipped} already in your library` : "")
+      );
+      onImported?.();
+    } finally {
+      // Runs even if a parse or a write threw, so the button can't stick on
+      // "Reading files…" with no way to retry.
+      setIsParsing(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  };
+
+  const handleClear = () => {
+    if (!confirmingClear) {
+      setConfirmingClear(true);
+      return;
+    }
+    clear();
+    setConfirmingClear(false);
+    toast.success("Removed all rides");
   };
 
   return (
@@ -86,6 +120,24 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
         Nothing is uploaded — files are read in your browser and stay on this
         device.
       </p>
+
+      {count > 0 && (
+        // Two-click confirm rather than window.confirm: native modals block
+        // the browser automation this is verified with.
+        <Button
+          type="button"
+          variant={confirmingClear ? "destructive" : "ghost"}
+          size="sm"
+          className="w-full"
+          onClick={handleClear}
+          onBlur={() => setConfirmingClear(false)}
+        >
+          <Trash2Icon />
+          {confirmingClear
+            ? `Really remove all ${count}?`
+            : "Remove all rides"}
+        </Button>
+      )}
     </div>
   );
 }

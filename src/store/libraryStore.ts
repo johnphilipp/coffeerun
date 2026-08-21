@@ -1,3 +1,4 @@
+import { useHydrationStore } from "@/store/hydrationStore";
 import { Activity } from "@/types/activity";
 import {
   isActivityCore,
@@ -51,6 +52,22 @@ export const useLibraryStore = create<LibraryState>()(
       // localStorage during SSR would produce a hydration mismatch, and
       // seeding activityStore fires canvas work that only exists in a browser.
       skipHydration: true,
+      version: 1,
+      // Present so the "couldn't be migrated" branch is unreachable. Without a
+      // migrate function zustand logs an error and hands merge `undefined`,
+      // which would silently empty the user's only copy of their rides. Shape
+      // drift is handled non-destructively by the isActivityCore filter below,
+      // so passing state through is safe.
+      migrate: (persisted) => persisted as LibraryState,
+      // On failure zustand's promise chain skips the `.then` that sets
+      // hasHydrated and fires the finish listeners, so this callback is the
+      // only signal that anything went wrong. Awaiting rehydrate() would not
+      // see it — the error is swallowed internally.
+      onRehydrateStorage: () => (_state, error) => {
+        useHydrationStore
+          .getState()
+          .setStatus(error ? "failed" : "ready");
+      },
       partialize: (state) => ({
         importedActivities: state.importedActivities.map(toActivityCore),
       }),

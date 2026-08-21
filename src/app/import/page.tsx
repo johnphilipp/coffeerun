@@ -11,6 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useLibrarySeed } from "@/hooks/useLibrarySeed";
+import { UploadIcon } from "lucide-react";
 import { useState } from "react";
 
 export default function ImportPage() {
@@ -23,6 +24,21 @@ export default function ImportPage() {
   return (
     <div className="h-full w-full">
       <Editor />
+
+      {/* Without this the picker is unreachable once dismissed — which also
+          stranded the "remove all rides" action inside it. Occupies the slot
+          the signed-in user menu used to hold. */}
+      {!isOpen && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="absolute right-6 top-4 z-50"
+          onClick={() => setIsOpen(true)}
+        >
+          <UploadIcon />
+          Add rides
+        </Button>
+      )}
 
       <Dialog open={isOpen} onOpenChange={setIsOpen}>
         <DialogContent className="sm:max-w-[425px] bg-popover backdrop-blur-xl text-white">

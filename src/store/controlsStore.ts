@@ -172,6 +172,10 @@ export const useControlsStore = create<ControlsState>()(
     {
       name: "coffeerun-controls",
       skipHydration: true,
+      version: 1,
+      // See libraryStore: present so a future version bump can't take the
+      // silent-wipe branch.
+      migrate: (persisted) => persisted as ControlsState,
       // Colors only. Selections and the date range are re-derived by
       // activityStore.setActivities() on load, which also means no Date objects
       // cross localStorage and plain JSON stays lossless.

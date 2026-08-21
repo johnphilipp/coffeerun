@@ -1,36 +1,41 @@
 "use client";
 
+import { persistApiOf } from "@/components/StoreHydrator";
 import { useActivityStore } from "@/store/activityStore";
+import { useHydrationStore } from "@/store/hydrationStore";
 import { useLibraryStore } from "@/store/libraryStore";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 
 /**
- * Copies the persisted library into the transient activity store once
- * localStorage has been read, and re-copies whenever the library changes (an
- * import, say). The `hydrated` flag exists so callers can hold off on rendering
- * an "no rides yet" state that would otherwise flash for anyone who does have
- * rides saved.
+ * Bridges the persisted library into the transient activity store.
+ *
+ * Status comes from hydrationStore rather than zustand's `hasHydrated()`,
+ * because that flag never flips when rehydration fails — which is what made
+ * /editor spin forever on a corrupt stored value.
  */
 export function useLibrarySeed() {
-  const [hydrated, setHydrated] = useState(false);
-  const importedActivities = useLibraryStore((state) => state.importedActivities);
+  const status = useHydrationStore((state) => state.status);
+  const importedActivities = useLibraryStore(
+    (state) => state.importedActivities
+  );
+  const clear = useLibraryStore((state) => state.clear);
   const setActivities = useActivityStore((state) => state.setActivities);
 
   useEffect(() => {
-    // StoreHydrator triggers rehydration from the root layout. localStorage is
-    // synchronous, so it has usually already finished by the time this runs.
-    if (useLibraryStore.persist.hasHydrated()) {
-      setHydrated(true);
-      return;
-    }
-    return useLibraryStore.persist.onFinishHydration(() => setHydrated(true));
-  }, []);
+    if (status === "pending") return;
+    // Seeded unconditionally, including with an empty array. The homepage puts
+    // demo data in the activity store, so a visitor arriving from / would
+    // otherwise see 45 rides that aren't theirs. Passing [] is what clears it.
+    setActivities(importedActivities);
+  }, [status, importedActivities, setActivities]);
 
-  useEffect(() => {
-    if (hydrated && importedActivities.length > 0) {
-      setActivities(importedActivities);
-    }
-  }, [hydrated, importedActivities, setActivities]);
+  // Recovery for `failed`: drop the unreadable value so the next load starts
+  // clean. Only ever called from an explicit user action.
+  const reset = useCallback(() => {
+    persistApiOf(useLibraryStore)?.clearStorage();
+    clear();
+    useHydrationStore.getState().setStatus("ready");
+  }, [clear]);
 
-  return { hydrated, count: importedActivities.length };
+  return { status, count: importedActivities.length, reset };
 }

@@ -1,32 +1,31 @@
 "use client";
 
 import Editor from "@/components/editor/Editor";
+import { Button } from "@/components/ui/button";
 import Spinner from "@/components/ui/spinner";
-import { Activity } from "@/types/activity";
-import { useEffect, useState } from "react";
+import { useDemoActivities } from "@/hooks/useDemoActivities";
+import Link from "next/link";
 
-/**
- * demoData is ~950KB. Importing it statically put it in the homepage's initial
- * JS, and passing it as a prop from the server /demo page also serialized it
- * into the RSC flight payload. Loading it lazily from a client component keeps
- * it out of both.
- */
 export default function DemoLoader() {
-  const [activities, setActivities] = useState<Activity[] | null>(null);
+  const status = useDemoActivities();
 
-  useEffect(() => {
-    let cancelled = false;
+  if (status === "failed") {
+    return (
+      <div className="flex h-full w-full flex-col items-center justify-center gap-4 px-6 text-center">
+        <h2 className="text-2xl font-bold text-gray-100">
+          Couldn&apos;t load the demo
+        </h2>
+        <p className="max-w-sm text-gray-300">
+          The sample rides failed to download. Check your connection and reload.
+        </p>
+        <Link href="/import">
+          <Button variant="outline">Add your own rides instead</Button>
+        </Link>
+      </div>
+    );
+  }
 
-    import("@/data/demoData").then(({ demoData }) => {
-      if (!cancelled) setActivities(demoData);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  if (!activities) {
+  if (status === "loading") {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Spinner />
@@ -34,5 +33,5 @@ export default function DemoLoader() {
     );
   }
 
-  return <Editor activities={activities} />;
+  return <Editor />;
 }

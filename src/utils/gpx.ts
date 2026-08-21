@@ -3,24 +3,46 @@ import { makeActivity } from "@/utils/activityCore";
 import polyline from "@mapbox/polyline";
 
 // GPX has no standard sport vocabulary. Strava exports put either a numeric
-// code or a loose string in <trk><type>, so cover both and fall back to Ride.
+// code or a loose string in <trk><type>; Garmin writes trail_running, Wahoo
+// writes "Trail Run". Keys here are normalized (lowercased, non-letters
+// stripped) so all those spellings land on one entry.
 const SPORT_BY_GPX_TYPE: Record<string, string> = {
-  "1": "Ride",
-  "4": "Hike",
-  "9": "Run",
-  "16": "Swim",
   ride: "Ride",
   cycling: "Ride",
   biking: "Ride",
+  bike: "Ride",
+  gravelride: "Ride",
+  mountainbikeride: "Ride",
+  ebikeride: "EBikeRide",
   run: "Run",
   running: "Run",
+  trailrun: "Run",
+  trailrunning: "Run",
   hike: "Hike",
   hiking: "Hike",
   walk: "Walk",
   walking: "Walk",
   swim: "Swim",
   swimming: "Swim",
+  kayaking: "Kayaking",
+  alpineski: "AlpineSki",
+  nordicski: "NordicSki",
+  snowboard: "Snowboard",
+  surfing: "Surfing",
+  rockclimbing: "RockClimbing",
 };
+
+// Strava's numeric activity codes, which survive in some older exports.
+const SPORT_BY_GPX_CODE: Record<string, string> = {
+  "1": "Ride",
+  "4": "Hike",
+  "9": "Run",
+  "16": "Swim",
+};
+
+function normalizeSportKey(raw: string): string {
+  return raw.toLowerCase().replace(/[^a-z]/g, "");
+}
 
 function haversineMeters(a: [number, number], b: [number, number]): number {
   const R = 6371000;
@@ -36,7 +58,8 @@ function haversineMeters(a: [number, number], b: [number, number]): number {
 }
 
 // Negative so a GPX id can never collide with a real Strava activity id, and
-// stable so re-importing the same file dedupes instead of duplicating.
+// stable so re-importing the same file dedupes instead of duplicating. The seed
+// must therefore contain nothing but file content — never a wall clock.
 function stableNegativeId(seed: string): number {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) {
@@ -46,8 +69,36 @@ function stableNegativeId(seed: string): number {
   return -((h >>> 0) || 1);
 }
 
-function textOf(parent: Element, tag: string): string | null {
-  return parent.getElementsByTagName(tag)[0]?.textContent?.trim() || null;
+// getElementsByTagName matches the *qualified* name in XML documents, so a
+// perfectly valid prefixed file (<gpx:trk>) would look empty. Matching on
+// localName in any namespace handles both spellings.
+function tagged(parent: Element | Document, tag: string): Element[] {
+  return Array.from(parent.getElementsByTagNameNS("*", tag));
+}
+
+function textOf(parent: Element | Document, tag: string): string | null {
+  return tagged(parent, tag)[0]?.textContent?.trim() || null;
+}
+
+/**
+ * UTC calendar components rendered *without* a trailing Z, so `new Date()`
+ * reads them as local time.
+ *
+ * GPX timestamps are always UTC and the format carries no timezone for the
+ * ride itself, so true ride-local time is unknowable. Storing the raw UTC
+ * instant in `start_date_local` made year bucketing depend on the viewer's
+ * browser timezone — a ride at 00:30 in Tokyo filed under the previous year
+ * for a European, and re-filed itself if the user travelled. This is
+ * deterministic for every viewer instead, which matters more here than being
+ * right about the hour.
+ */
+export function toNaiveLocalIso(ms: number): string {
+  const d = new Date(ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+    `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}` +
+    `T${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}`
+  );
 }
 
 /**
@@ -58,22 +109,39 @@ function textOf(parent: Element, tag: string): string | null {
  * first), .fit (binary, needs a real parser), .tcx (would be a small extension
  * of this function).
  */
-export function parseGpx(xml: string, fileName: string): Activity[] {
+export function parseGpx(
+  xml: string,
+  fileName: string,
+  /**
+   * Used to date tracks that carry no timestamps at all — pass the source
+   * file's `lastModified`. Deliberately kept out of the id seed: it's a
+   * reasonable guess at when a ride happened, but it changes if the file is
+   * re-downloaded, and an id that moves would resurrect duplicate imports.
+   */
+  fallbackTimeMs?: number
+): Activity[] {
   const doc = new DOMParser().parseFromString(xml, "application/xml");
-  if (doc.getElementsByTagName("parsererror").length > 0) {
+  if (tagged(doc, "parsererror").length > 0) {
     throw new Error(`${fileName} is not valid XML`);
   }
 
-  const tracks = Array.from(doc.getElementsByTagName("trk"));
+  const tracks = tagged(doc, "trk");
   if (tracks.length === 0) {
     throw new Error(`${fileName} contains no <trk> element`);
   }
+
+  // Many route exports have no per-point times but do carry <metadata><time>.
+  // Scoped to the metadata element so it can't pick up a trkpt timestamp.
+  const metadataEl = tagged(doc, "metadata")[0];
+  const metadataTimeMs = metadataEl
+    ? Date.parse(textOf(metadataEl, "time") ?? "")
+    : NaN;
 
   const fallbackName = fileName.replace(/\.gpx$/i, "");
   const activities: Activity[] = [];
 
   for (const trk of tracks) {
-    const points = Array.from(trk.getElementsByTagName("trkpt"));
+    const points = tagged(trk, "trkpt");
     const coords: [number, number][] = [];
     let firstMs = Number.POSITIVE_INFINITY;
     let lastMs = Number.NEGATIVE_INFINITY;
@@ -117,26 +185,47 @@ export function parseGpx(xml: string, fileName: string): Activity[] {
       distance += haversineMeters(coords[i - 1], coords[i]);
     }
 
-    const hasTimes = Number.isFinite(firstMs) && Number.isFinite(lastMs);
-    // Untimed tracks are dated now so they land in the current year's filter
-    // rather than 1970, where they'd be invisible.
-    const startIso = hasTimes
-      ? new Date(firstMs).toISOString()
-      : new Date().toISOString();
+    const hasTrackTimes = Number.isFinite(firstMs) && Number.isFinite(lastMs);
+    // Anything derived from file content is stable across re-imports and safe
+    // to identify a ride by. lastModified is not, so it dates the ride without
+    // contributing to its id.
+    const contentTimeMs = hasTrackTimes
+      ? firstMs
+      : Number.isFinite(metadataTimeMs)
+      ? metadataTimeMs
+      : NaN;
+    const hasStableTime = Number.isFinite(contentTimeMs);
+    const startMs = hasStableTime
+      ? contentTimeMs
+      : fallbackTimeMs ?? Date.now();
+
     // GPX can't reliably express pauses, so moving time == elapsed time.
-    const seconds = hasTimes ? Math.round((lastMs - firstMs) / 1000) : 0;
+    const seconds = hasTrackTimes ? Math.round((lastMs - firstMs) / 1000) : 0;
 
     const summaryPolyline = polyline.encode(coords);
-    const rawType = textOf(trk, "type")?.toLowerCase() ?? "";
-    const sport = SPORT_BY_GPX_TYPE[rawType] ?? "Ride";
+    const name = textOf(trk, "name") ?? fallbackName;
+    const rawType = textOf(trk, "type") ?? "";
+    // Unknown or absent types become Workout rather than Ride — mislabelling
+    // 200 runs as rides makes the type filter actively wrong.
+    const sport =
+      SPORT_BY_GPX_CODE[rawType.trim()] ??
+      SPORT_BY_GPX_TYPE[normalizeSportKey(rawType)] ??
+      "Workout";
 
     activities.push(
       makeActivity({
-        id: stableNegativeId(`${summaryPolyline}|${startIso}`),
-        name: textOf(trk, "name") ?? fallbackName,
+        // Two rides over one route on different days are different activities,
+        // so include the time when it's trustworthy. When it isn't, the name
+        // separates distinct routes and identical files still collapse.
+        id: stableNegativeId(
+          hasStableTime
+            ? `${summaryPolyline}|${new Date(startMs).toISOString()}`
+            : `${summaryPolyline}|${name}`
+        ),
+        name,
         type: sport,
         sport_type: sport,
-        start_date_local: startIso,
+        start_date_local: toNaiveLocalIso(startMs),
         distance: Math.round(distance),
         moving_time: seconds,
         elapsed_time: seconds,

@@ -1,26 +1,16 @@
 import { Activity } from "@/types/activity";
 
 /**
- * The only parts of an Activity anything in this app actually reads, plus the
- * couple of stats the picker displays. Used both as the output shape of the GPX
- * parser and as the persisted shape in localStorage — the ~30 remaining fields
- * on Activity are Strava API noise that would only waste storage.
+ * The only parts of an Activity anything in this app reads, plus the couple of
+ * stats the picker displays. Used both as the output shape of the GPX parser
+ * and as the persisted shape in localStorage — the ~30 remaining fields on
+ * Activity are Strava API noise that would only waste storage.
+ *
+ * Declared as a value first so the type is derived from it. Keeping a separate
+ * `Pick<>` union in sync by hand meant adding a field could silently stop it
+ * being copied and stored, with no type error anywhere.
  */
-export type ActivityCore = Pick<
-  Activity,
-  | "id"
-  | "name"
-  | "type"
-  | "sport_type"
-  | "start_date_local"
-  | "distance"
-  | "moving_time"
-  | "elapsed_time"
-  | "total_elevation_gain"
-  | "map"
->;
-
-const CORE_KEYS: (keyof ActivityCore)[] = [
+export const CORE_KEYS = [
   "id",
   "name",
   "type",
@@ -31,13 +21,18 @@ const CORE_KEYS: (keyof ActivityCore)[] = [
   "elapsed_time",
   "total_elevation_gain",
   "map",
-];
+] as const;
+
+export type ActivityCore = Pick<Activity, (typeof CORE_KEYS)[number]>;
 
 /** Fills the Strava-specific fields with neutral defaults. */
 export function makeActivity(core: ActivityCore): Activity {
   return {
     resource_state: 2,
     athlete: { id: 0, resource_state: 1 },
+    // Not authoritative for GPX-derived activities: start_date_local holds
+    // naive local time (see toNaiveLocalIso), so this isn't a real UTC
+    // instant. Nothing reads it, so it isn't worth persisting a second field.
     start_date: core.start_date_local,
     timezone: "",
     utc_offset: 0,
@@ -58,8 +53,7 @@ export function makeActivity(core: ActivityCore): Activity {
     gear_id: null,
     start_latlng: [],
     end_latlng: [],
-    average_speed:
-      core.moving_time > 0 ? core.distance / core.moving_time : 0,
+    average_speed: core.moving_time > 0 ? core.distance / core.moving_time : 0,
     max_speed: 0,
     ...core,
   };
@@ -67,9 +61,13 @@ export function makeActivity(core: ActivityCore): Activity {
 
 /** Strips an Activity down to what's worth persisting. */
 export function toActivityCore(activity: Activity): ActivityCore {
-  const core = {} as Record<string, unknown>;
-  for (const key of CORE_KEYS) core[key] = activity[key];
-  return core as unknown as ActivityCore;
+  const core = {} as Pick<Activity, (typeof CORE_KEYS)[number]>;
+  for (const key of CORE_KEYS) {
+    // Assigning across a union of key types needs the widened target; the
+    // derived ActivityCore guarantees every key exists on Activity.
+    (core as Record<string, unknown>)[key] = activity[key];
+  }
+  return core;
 }
 
 export function isActivityCore(value: unknown): value is ActivityCore {

@@ -2,27 +2,14 @@
 
 import Scene from "@/components/editor/Scene";
 import { Button } from "@/components/ui/button";
-import { useActivityStore } from "@/store/activityStore";
+import { useDemoActivities } from "@/hooks/useDemoActivities";
 import { ChevronRight, UploadIcon } from "lucide-react";
 import Link from "next/link";
-import { useEffect } from "react";
 
 export default function Home() {
-  const setActivities = useActivityStore((state) => state.setActivities);
-
-  // Loaded lazily — the fixture is ~950KB and the mug it decorates isn't
-  // needed for first paint.
-  useEffect(() => {
-    let cancelled = false;
-
-    import("@/data/demoData").then(({ demoData }) => {
-      if (!cancelled) setActivities(demoData);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [setActivities]);
+  // The hero mug is decorative here, so a failed load just leaves it empty
+  // rather than blocking the page.
+  useDemoActivities();
 
   return (
     <div className="h-[100dvh] overflow-hidden">
