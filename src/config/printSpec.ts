@@ -37,7 +37,7 @@ function makeSpec(
 }
 
 export const PRINT_SPECS = {
-  // 213mm x 103mm @ 300 DPI -> 2516 x 1216 px.
+  // 213mm x 103mm @ 300 DPI -> 2516 x 1217 px.
   gelatoWhite15oz: makeSpec({
     label: "Gelato White 15oz Ceramic Mug",
     widthMm: 213,

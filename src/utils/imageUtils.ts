@@ -11,12 +11,14 @@ const MUG_BACKGROUND = "#ffffff";
 
 // The printable wrap is 213mm wide (Gelato 15oz). Both the 3D texture and the
 // print file map their design region onto that same physical width, so
-// expressing stroke/margin in mm and converting per-target keeps the preview
-// and the print physically consistent.
+// stroke widths expressed in mm come out the same physical size in each.
 const PRINTABLE_WIDTH_MM = DEFAULT_PRINT_SPEC.widthMm;
 
-// The 3D texture's design region, hand-tuned to the caneca.glb wrap. This is
-// where createImage historically drew, inside a 2048x2048 texture.
+// The 3D texture's design region, hand-tuned to the caneca.glb wrap. Its aspect
+// (2.6:1) differs from the print area (~2.07:1), so the two share the grid
+// arrangement (same route in the same cell) and stroke sizing, but a cell's
+// proportions differ slightly between preview and print — an approximation;
+// an exact match would mean retuning this band on the model.
 const TEXTURE = {
   canvas: 2048,
   region: { x: 480, y: 1450, width: 1300, height: 500 },
@@ -30,6 +32,8 @@ interface RenderSpec {
   stroke: string;
   /** Canvas pixels per millimetre of printable width — sizes the strokes. */
   pxPerMm: number;
+  /** Aspect the grid is packed for; shared so preview and print match. */
+  gridAspect: { w: number; h: number };
   activities: Activity[];
 }
 
@@ -62,18 +66,21 @@ function getDesignMetricsMm(n: number): {
       ? { strokeMm: 0.66, marginMm: 0.66 }
       : { strokeMm: 0.49, marginMm: 0.49 };
 
-  return { strokeMm: Math.max(raw.strokeMm, MIN_STROKE_MM), marginMm: raw.marginMm };
+  const strokeMm = Math.max(raw.strokeMm, MIN_STROKE_MM);
+  // Keep the inter-cell gap at least as wide as a stroke's half-width, or a
+  // floored stroke on a dense mug spills past its cell into the neighbour and
+  // adjacent routes merge into a blob.
+  const marginMm = Math.max(raw.marginMm, strokeMm / 2);
+  return { strokeMm, marginMm };
 }
 
-// Grid arrangement is computed against one canonical aspect (the print area)
-// so a given route lands in the same cell in the preview and the print. Each
-// target then draws that arrangement into its own region.
-function designGrid(n: number) {
-  return calculateGridDimensions(
-    n,
-    DEFAULT_PRINT_SPEC.widthMm,
-    DEFAULT_PRINT_SPEC.heightMm
-  );
+// Grid arrangement is computed against the print area's aspect so a given route
+// lands in the same cell in the preview and the print. Each target draws that
+// arrangement into its own region. The aspect is threaded through the spec so a
+// non-default print size lays its grid out correctly, rather than always using
+// the default.
+function designGrid(n: number, aspectW: number, aspectH: number) {
+  return calculateGridDimensions(n, aspectW, aspectH);
 }
 
 /** Draws the routes onto a fresh canvas per the spec and returns it. */
@@ -97,7 +104,7 @@ function renderDesign(spec: RenderSpec): HTMLCanvasElement {
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
 
-  const { rows, cols } = designGrid(n);
+  const { rows, cols } = designGrid(n, spec.gridAspect.w, spec.gridAspect.h);
   const boxHeight = spec.region.height / rows;
 
   spec.activities.forEach((activity, index) => {
@@ -139,6 +146,8 @@ export const createImage = async (): Promise<string> => {
     background: MUG_BACKGROUND,
     stroke: strokeColor,
     pxPerMm: TEXTURE.region.width / PRINTABLE_WIDTH_MM,
+    // Grid packed for the print aspect so the preview matches the print target.
+    gridAspect: { w: DEFAULT_PRINT_SPEC.widthMm, h: DEFAULT_PRINT_SPEC.heightMm },
     activities: filteredActivities,
   });
 
@@ -169,6 +178,8 @@ export function createPrintCanvas(
     background: MUG_BACKGROUND,
     stroke: strokeColor,
     pxPerMm: spec.widthPx / spec.widthMm,
+    // This spec's own aspect, so a non-default size packs its grid correctly.
+    gridAspect: { w: spec.widthMm, h: spec.heightMm },
     activities: filteredActivities,
   });
 }

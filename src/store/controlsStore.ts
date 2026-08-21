@@ -7,8 +7,9 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 interface ControlsState {
-  // The mug is white now, so routes just need a color. Default is dark so it's
-  // visible on white (was #ffffff back when the mug was black).
+  // The mug is white now, so routes just need a color. Default is black so
+  // it's visible on white and is one of the picker's swatches (was #ffffff
+  // back when the mug was black).
   strokeColor: string;
   selectedActivityTypes: ActivityTypeDefinition[];
   selectedDateRange: DateRange | undefined;
@@ -35,7 +36,7 @@ const CONTROLS_STORAGE_KEY = "coffeerun-controls";
 export const useControlsStore = create<ControlsState>()(
   persist(
     (set, get) => ({
-      strokeColor: "#111111",
+      strokeColor: "#000000",
       selectedActivityTypes: activityTypeDefinitions,
       selectedDateRange: undefined,
       selectedYears: [],
@@ -180,7 +181,7 @@ export const useControlsStore = create<ControlsState>()(
           strokeColor:
             typeof stroke === "string" && !isOldWhiteDefault
               ? stroke
-              : "#111111",
+              : "#000000",
         } as ControlsState;
       },
       // strokeColor only. Selections and the date range are re-derived by
