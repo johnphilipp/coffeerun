@@ -48,13 +48,26 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
         // whole set into the activity store, so previously imported rides stay
         // on the mug.
         added = addActivities(parsed);
-      } catch {
+      } catch (error) {
         // zustand's persist writes to localStorage synchronously inside `set`,
         // so a QuotaExceededError surfaces here — after the rides are already
         // in memory. Keeping them means this mug is still finishable; saying so
         // means the user isn't surprised when they vanish on reload.
+        //
+        // Only claim it's a quota problem when it actually is. Blaming every
+        // throw on full storage sent people deleting rides to free space that
+        // was never the issue, and swallowing the error left nothing in the
+        // console to correct it.
+        const isQuota =
+          error instanceof DOMException &&
+          (error.name === "QuotaExceededError" ||
+            error.name === "NS_ERROR_DOM_QUOTA_REACHED");
+
+        console.error("Failed to save imported rides:", error);
         toast.error(
-          "Storage is full — these rides are loaded but won't be saved. Remove some rides, or import fewer files."
+          isQuota
+            ? "Storage is full — these rides are loaded but won't be saved. Remove some rides, or import fewer files."
+            : "These rides are loaded but couldn't be saved, so they'll be gone on reload."
         );
         onImported?.();
         return;
@@ -90,9 +103,15 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
       setConfirmingClear(true);
       return;
     }
-    clear();
     setConfirmingClear(false);
-    toast.success("Removed all rides");
+    try {
+      // Persisted write, so it can throw on a zero-quota profile.
+      clear();
+      toast.success("Removed all rides");
+    } catch (error) {
+      console.error("Failed to clear rides:", error);
+      toast.error("Couldn't remove the saved rides — this browser blocked the write.");
+    }
   };
 
   return (
@@ -118,6 +137,10 @@ export default function GpxDropzone({ onImported }: GpxDropzoneProps) {
       onDrop={(event) => {
         event.preventDefault();
         setIsDragging(false);
+        // Gated like the picker button is. Without this a second drop mid-parse
+        // started a concurrent run whose finally block re-enabled the UI and
+        // closed the dialog while the first batch was still reading.
+        if (isParsing) return;
         handleFiles(event.dataTransfer.files);
       }}
     >

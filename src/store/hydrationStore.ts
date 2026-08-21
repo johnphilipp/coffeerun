@@ -21,10 +21,19 @@ export type HydrationStatus = "pending" | "ready" | "unavailable" | "failed";
 
 interface HydrationState {
   status: HydrationStatus;
+  /**
+   * Rides that were stored but couldn't be read back. Partial loss keeps the
+   * survivors rather than blocking the whole library, so this exists to warn
+   * about it instead of dropping them silently.
+   */
+  droppedRides: number;
   setStatus: (status: HydrationStatus) => void;
+  setDroppedRides: (count: number) => void;
 }
 
 export const useHydrationStore = create<HydrationState>((set) => ({
   status: "pending",
+  droppedRides: 0,
   setStatus: (status) => set({ status }),
+  setDroppedRides: (droppedRides) => set({ droppedRides }),
 }));

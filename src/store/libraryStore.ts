@@ -22,6 +22,14 @@ interface LibraryState {
   clear: () => void;
 }
 
+/**
+ * merge() runs before onRehydrateStorage's callback and can't set status
+ * itself — the callback would immediately overwrite it — so the outcome is
+ * handed over through these two.
+ */
+let lastMergeOutcome: "ok" | "unreadable" = "ok";
+let lastMergeDropped = 0;
+
 export const useLibraryStore = create<LibraryState>()(
   persist(
     (set, get) => ({
@@ -72,10 +80,23 @@ export const useLibraryStore = create<LibraryState>()(
       // hasHydrated and fires the finish listeners, so this callback is the
       // only signal that anything went wrong. Awaiting rehydrate() would not
       // see it — the error is swallowed internally.
+      //
+      // A throw isn't the only way to lose rides, though: a value that parses
+      // but doesn't match the expected shape used to report "ready" with an
+      // empty library, so the recovery screen never showed and the next import
+      // wrote over data that was still there. Total loss is now reported as
+      // failed; partial loss keeps what survived and is counted for a warning,
+      // because blocking access to 48 good rides over 2 bad ones is worse.
       onRehydrateStorage: () => (_state, error) => {
-        useHydrationStore
-          .getState()
-          .setStatus(error ? "failed" : "ready");
+        const hydration = useHydrationStore.getState();
+        if (error || lastMergeOutcome === "unreadable") {
+          hydration.setStatus("failed");
+        } else {
+          hydration.setStatus("ready");
+          if (lastMergeDropped > 0) hydration.setDroppedRides(lastMergeDropped);
+        }
+        lastMergeOutcome = "ok";
+        lastMergeDropped = 0;
       },
       partialize: (state) => ({
         importedActivities: state.importedActivities.map(toActivityCore),
@@ -83,12 +104,24 @@ export const useLibraryStore = create<LibraryState>()(
       merge: (persisted, current) => {
         const stored = (persisted as { importedActivities?: unknown })
           ?.importedActivities;
-        if (!Array.isArray(stored)) return current;
+
+        // Nothing stored yet is normal; a stored value of the wrong shape is not.
+        if (stored === undefined) return current;
+        if (!Array.isArray(stored)) {
+          lastMergeOutcome = "unreadable";
+          return current;
+        }
+
+        const usable = stored.filter(isActivityCore);
+        if (usable.length === 0 && stored.length > 0) {
+          lastMergeOutcome = "unreadable";
+          return current;
+        }
+        lastMergeDropped = stored.length - usable.length;
+
         return {
           ...current,
-          importedActivities: stored
-            .filter(isActivityCore)
-            .map((core) => makeActivity(core)),
+          importedActivities: usable.map((core) => makeActivity(core)),
         };
       },
     }

@@ -30,6 +30,9 @@ interface ControlsState {
   toggleRotation: () => void;
 }
 
+// Shared so the recovery handler can't drift from the key it's meant to clear.
+const CONTROLS_STORAGE_KEY = "coffeerun-controls";
+
 export const useControlsStore = create<ControlsState>()(
   persist(
     (set, get) => ({
@@ -170,7 +173,7 @@ export const useControlsStore = create<ControlsState>()(
       },
     }),
     {
-      name: "coffeerun-controls",
+      name: CONTROLS_STORAGE_KEY,
       skipHydration: true,
       version: 1,
       // Colors are trivially reproducible, unlike someone's rides, so a
@@ -181,7 +184,7 @@ export const useControlsStore = create<ControlsState>()(
       onRehydrateStorage: () => (_state, error) => {
         if (!error) return;
         try {
-          localStorage.removeItem("coffeerun-controls");
+          localStorage.removeItem(CONTROLS_STORAGE_KEY);
         } catch {
           // Storage is unavailable; nothing to clean up.
         }

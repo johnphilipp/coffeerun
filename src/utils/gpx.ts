@@ -128,6 +128,22 @@ function textOf(parent: Element | Document, tag: string): string | null {
 }
 
 /**
+ * Direct children only, unlike `textOf`.
+ *
+ * `tagged` is a whole-subtree query, so reading a route's <name> that way
+ * picked up the first <rtept><name> — a waypoint label like "Start" — when the
+ * route had no name of its own. That became the activity's name and, on the
+ * untimed path, part of its id seed, so two exports of one route with different
+ * waypoint labelling hashed differently and both imported.
+ */
+function directChildText(parent: Element, tag: string): string | null {
+  for (const child of Array.from(parent.children)) {
+    if (child.localName === tag) return child.textContent?.trim() || null;
+  }
+  return null;
+}
+
+/**
  * UTC calendar components rendered *without* a trailing Z, so `new Date()`
  * reads them as local time.
  *
@@ -246,28 +262,36 @@ export function parseGpx(
       ? metadataTimeMs
       : NaN;
     const hasStableTime = Number.isFinite(contentTimeMs);
-    const startMs = hasStableTime
-      ? contentTimeMs
-      : fallbackTimeMs ?? Date.now();
+    // `??` would let a lastModified of 0 through — common when an archiver
+    // drops mtimes — dating the ride to 1970, where the auto-selected latest
+    // year hides it while a stray 1970 sits in the date picker.
+    const usableFallbackMs =
+      Number.isFinite(fallbackTimeMs) && (fallbackTimeMs as number) > 0
+        ? (fallbackTimeMs as number)
+        : Date.now();
+    const startMs = hasStableTime ? contentTimeMs : usableFallbackMs;
 
     // GPX can't reliably express pauses, so moving time == elapsed time.
     const seconds = hasTrackTimes ? Math.round((lastMs - firstMs) / 1000) : 0;
 
     const summaryPolyline = polyline.encode(coords);
-    const name = textOf(trk, "name") ?? fallbackName;
+    const name = directChildText(trk, "name") ?? fallbackName;
     // Unknown or absent types become Workout rather than Ride — mislabelling
     // 200 runs as rides makes the type filter actively wrong.
-    const sport = resolveSport(textOf(trk, "type") ?? "");
+    const sport = resolveSport(directChildText(trk, "type") ?? "");
 
     activities.push(
       makeActivity({
         // Two rides over one route on different days are different activities,
-        // so include the time when it's trustworthy. When it isn't, the name
-        // separates distinct routes and identical files still collapse.
+        // so include the time when it's trustworthy. When it isn't, geometry
+        // alone identifies the route: the name would otherwise pull in the
+        // filename fallback, so two copies of one untimed route under different
+        // filenames would both import. Two untimed recordings of the same route
+        // are indistinguishable anyway, so collapsing them is the right call.
         id: stableNegativeId(
           hasStableTime
             ? `${summaryPolyline}|${new Date(startMs).toISOString()}`
-            : `${summaryPolyline}|${name}`
+            : summaryPolyline
         ),
         name,
         type: sport,
